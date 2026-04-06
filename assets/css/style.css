@@ -24,6 +24,9 @@
     fill: red!important;
 }
 
+[data-bs-theme="dark"] .highcharts-axis-labels, .highcharts-xaxis-labels{
+    color: white!important;
+}
 
 [data-bs-theme="light"] svg.primary{
     fill: black!important;
@@ -43,4 +46,8 @@
 
 [data-bs-theme="light"] svg.fail, [data-bs-theme="light"] svg.danger{
     fill: red!important;
+}
+
+[data-bs-theme="light"] .highcharts-axis-labels, .highcharts-xaxis-labels{
+    color: var(--bs-primary)!important;
 }

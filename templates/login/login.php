@@ -18,7 +18,7 @@ $login_imageUrl = file_exists($login_image) ? image('login-' . $page_theme . '.s
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <link rel="stylesheet" href="<?= asset('assets/css/bootstrap-5.3.3.css') ?>">
-        <link rel="stylesheet" href="<?= asset('assets/css/crm-icons.css') ?>">
+        <link rel="stylesheet" href="<?= asset('assets/css/style.css') ?>">
         <link rel="stylesheet" href="<?= url('templates/login/login.css') ?>">
         <link rel="icon" href="<?= asset('favicon.ico') ?>">
         <script src="<?= url('templates/login/login.js') ?>"></script>

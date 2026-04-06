@@ -97,7 +97,7 @@ function montly_build_where(array $filters, array $options = []): string
 function montly_create_select(string $select = '*'): Select
 {
 
-    return Select($select)->from('view_montly_bills')->orderby('id desc');
+    return Select($select)->from('view_montly_bills')->orderby('day desc, id desc');
 
 }
 

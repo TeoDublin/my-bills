@@ -4,7 +4,6 @@ require_once __DIR__ . '/../../../includes/constants.php';
 require_once __DIR__ . '/../../../includes/class.php';
 require_once __DIR__ . '/../../../includes/functions.php';
 require_once __DIR__ . '/functions.php';
-require_once __DIR__ . '/../../../jobs/montly_sync.php';
 
 header('Content-Type: application/json');
 
@@ -28,14 +27,12 @@ if ($action === '') {
 
 try {
 
-    if ($action === 'create_montly_bill') {
+    if ($action === 'create_bill') {
 
         $group_id = filter_input(INPUT_POST, 'group_id', FILTER_VALIDATE_INT);
         $name = trim(post_string('name'));
         $value_raw = str_replace(',', '.', trim(post_string('value')));
-        $day = filter_input(INPUT_POST, 'day', FILTER_VALIDATE_INT);
-        $first_date = trim(post_string('first_date'));
-        $last_date = trim(post_string('last_date'));
+        $date = trim(post_string('date'));
 
         if ($group_id === false || $group_id === null || $group_id <= 0) {
 
@@ -44,7 +41,7 @@ try {
 
         if ($name === '') {
 
-            throw new InvalidArgumentException('Enter the monthly bill name.');
+            throw new InvalidArgumentException('Enter the bill name.');
         }
 
         if (!is_numeric($value_raw)) {
@@ -58,19 +55,9 @@ try {
             throw new InvalidArgumentException('The value cannot be negative.');
         }
 
-        if (!montly_day_is_valid($day)) {
+        if (!bills_is_valid_date($date)) {
 
-            throw new InvalidArgumentException('Day must be between 1 and 31.');
-        }
-
-        if ($first_date !== '' && !montly_is_valid_date($first_date)) {
-
-            throw new InvalidArgumentException('Enter a valid first date.');
-        }
-
-        if ($last_date !== '' && !montly_is_valid_date($last_date)) {
-
-            throw new InvalidArgumentException('Enter a valid last date.');
+            throw new InvalidArgumentException('Enter a valid date.');
         }
 
         $group_exists = SQL()->select("
@@ -85,39 +72,33 @@ try {
             throw new InvalidArgumentException('The selected group does not exist.');
         }
 
-        $row_id = Insert([
+        $bill_id = Insert([
             'id_group' => (int) $group_id,
             'name' => $name,
             'value' => number_format($value, 2, '.', ''),
-            'day' => (int) $day,
-            'first_date' => $first_date !== '' ? $first_date : null,
-            'last_date' => $last_date !== '' ? $last_date : null,
-        ])->into('montly_bills')->get();
-        $sync_summary = montly_sync_run(date('Y-m-d'));
+            'date' => $date,
+        ])->into('bills')->get();
 
         echo json_encode([
             'ok' => true,
-            'message' => 'Monthly bill created.',
-            'id' => (int) $row_id,
-            'groups' => montly_group_options_payload(),
-            'sync' => $sync_summary,
+            'message' => 'Bill created.',
+            'bill_id' => (int) $bill_id,
+            'groups' => bills_group_options_payload(),
         ]);
         exit;
     }
 
-    if ($action === 'update_montly_bill') {
+    if ($action === 'update_bill') {
 
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $bill_id = filter_input(INPUT_POST, 'bill_id', FILTER_VALIDATE_INT);
         $group_id = filter_input(INPUT_POST, 'group_id', FILTER_VALIDATE_INT);
         $name = trim(post_string('name'));
         $value_raw = str_replace(',', '.', trim(post_string('value')));
-        $day = filter_input(INPUT_POST, 'day', FILTER_VALIDATE_INT);
-        $first_date = trim(post_string('first_date'));
-        $last_date = trim(post_string('last_date'));
+        $date = trim(post_string('date'));
 
-        if ($id === false || $id === null || $id <= 0) {
+        if ($bill_id === false || $bill_id === null || $bill_id <= 0) {
 
-            throw new InvalidArgumentException('Invalid monthly bill.');
+            throw new InvalidArgumentException('Invalid bill.');
         }
 
         if ($group_id === false || $group_id === null || $group_id <= 0) {
@@ -127,7 +108,7 @@ try {
 
         if ($name === '') {
 
-            throw new InvalidArgumentException('Enter the monthly bill name.');
+            throw new InvalidArgumentException('Enter the bill name.');
         }
 
         if (!is_numeric($value_raw)) {
@@ -141,31 +122,21 @@ try {
             throw new InvalidArgumentException('The value cannot be negative.');
         }
 
-        if (!montly_day_is_valid($day)) {
+        if (!bills_is_valid_date($date)) {
 
-            throw new InvalidArgumentException('Day must be between 1 and 31.');
+            throw new InvalidArgumentException('Enter a valid date.');
         }
 
-        if ($first_date !== '' && !montly_is_valid_date($first_date)) {
-
-            throw new InvalidArgumentException('Enter a valid first date.');
-        }
-
-        if ($last_date !== '' && !montly_is_valid_date($last_date)) {
-
-            throw new InvalidArgumentException('Enter a valid last date.');
-        }
-
-        $row_exists = SQL()->select("
+        $bill_exists = SQL()->select("
             SELECT id
-            FROM montly_bills
-            WHERE id = " . (int) $id . "
+            FROM bills
+            WHERE id = " . (int) $bill_id . "
             LIMIT 1
         ");
 
-        if ($row_exists === []) {
+        if ($bill_exists === []) {
 
-            throw new InvalidArgumentException('The selected monthly bill does not exist.');
+            throw new InvalidArgumentException('The selected bill does not exist.');
         }
 
         $group_exists = SQL()->select("
@@ -180,106 +151,20 @@ try {
             throw new InvalidArgumentException('The selected group does not exist.');
         }
 
-        Update('montly_bills')
+        Update('bills')
             ->set([
                 'id_group' => (int) $group_id,
                 'name' => $name,
                 'value' => number_format($value, 2, '.', ''),
-                'day' => (int) $day,
-                'first_date' => $first_date !== '' ? $first_date : null,
-                'last_date' => $last_date !== '' ? $last_date : null,
+                'date' => $date,
             ])
-            ->where('id = ' . (int) $id);
-        $history_refresh = montly_sync_refresh_bill_history((int) $id);
-        $sync_summary = montly_sync_run(date('Y-m-d'));
+            ->where('id = ' . (int) $bill_id);
 
         echo json_encode([
             'ok' => true,
-            'message' => 'Monthly bill updated.',
-            'id' => (int) $id,
-            'groups' => montly_group_options_payload(),
-            'history_refresh' => $history_refresh,
-            'sync' => $sync_summary,
-        ]);
-        exit;
-    }
-
-    if ($action === 'delete_montly_bill') {
-
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-
-        if ($id === false || $id === null || $id <= 0) {
-
-            throw new InvalidArgumentException('Invalid monthly bill.');
-        }
-
-        $row_exists = SQL()->select("
-            SELECT id
-            FROM montly_bills
-            WHERE id = " . (int) $id . "
-            LIMIT 1
-        ");
-
-        if ($row_exists === []) {
-
-            throw new InvalidArgumentException('The selected monthly bill does not exist.');
-        }
-
-        $deleted_history_rows = montly_sync_delete_generated_rows_for_bill_ids([(int) $id]);
-
-        Delete()
-            ->from('montly_bills')
-            ->where('id = ' . (int) $id);
-
-        echo json_encode([
-            'ok' => true,
-            'message' => 'Monthly bill deleted.',
-            'id' => (int) $id,
-            'groups' => montly_group_options_payload(),
-            'deleted_history_rows' => $deleted_history_rows,
-        ]);
-        exit;
-    }
-
-    if ($action === 'bulk_delete_montly_bills') {
-
-        $payload = montly_create_bulk_action_payload_from_request($_POST);
-        $where = montly_build_where($payload['filters'], [
-            'selected_ids' => $payload['selected_ids'],
-        ]);
-
-        $count_rows = SQL()->select("
-            SELECT COUNT(*) AS total
-            FROM montly_bills
-            WHERE " . $where . "
-        ");
-        $total = (int) ($count_rows[0]['total'] ?? 0);
-
-        if ($total <= 0) {
-
-            throw new InvalidArgumentException('No monthly bills found to delete.');
-        }
-
-        $rows_to_delete = SQL()->select("
-            SELECT id
-            FROM montly_bills
-            WHERE " . $where . "
-        ");
-        $montly_bill_ids = array_values(array_filter(array_map(
-            static fn (array $row): int => (int) ($row['id'] ?? 0),
-            $rows_to_delete
-        ), static fn (int $id): bool => $id > 0));
-        $deleted_history_rows = montly_sync_delete_generated_rows_for_bill_ids($montly_bill_ids);
-
-        SQL()->query("
-            DELETE FROM montly_bills
-            WHERE " . $where . "
-        ");
-
-        echo json_encode([
-            'ok' => true,
-            'message' => $total === 1 ? '1 monthly bill deleted.' : ($total . ' monthly bills deleted.'),
-            'deleted_history_rows' => $deleted_history_rows,
+            'message' => 'Bill updated.',
+            'bill_id' => (int) $bill_id,
+            'groups' => bills_group_options_payload(),
         ]);
         exit;
     }
@@ -313,7 +198,7 @@ try {
             'ok' => true,
             'message' => 'Group created.',
             'group_id' => (int) $group_id,
-            'groups' => montly_group_options_payload(),
+            'groups' => bills_group_options_payload(),
         ]);
         exit;
     }
@@ -368,7 +253,7 @@ try {
             'ok' => true,
             'message' => 'Group updated.',
             'group_id' => (int) $group_id,
-            'groups' => montly_group_options_payload(),
+            'groups' => bills_group_options_payload(),
         ]);
         exit;
     }
@@ -394,28 +279,93 @@ try {
             throw new InvalidArgumentException('The selected group does not exist.');
         }
 
-        $related_rows = SQL()->select("
+        $related_bills = SQL()->select("
             SELECT COUNT(*) AS total
-            FROM montly_bills
+            FROM bills
             WHERE id_group = " . (int) $group_id . "
         ");
 
-        if ((int) ($related_rows[0]['total'] ?? 0) > 0) {
+        if ((int) ($related_bills[0]['total'] ?? 0) > 0) {
 
-            throw new InvalidArgumentException('You cannot delete the group because monthly bills are linked to it.');
+            throw new InvalidArgumentException('You cannot delete the group because bills are linked to it.');
         }
 
         Delete()
             ->from('bills_groups')
             ->where('id = ' . (int) $group_id);
 
-        $groups = montly_group_options_payload();
+        $groups = bills_group_options_payload();
 
         echo json_encode([
             'ok' => true,
             'message' => 'Group deleted.',
             'groups' => $groups,
             'selected_group_id' => (int) ($groups[0]['id'] ?? 0),
+        ]);
+        exit;
+    }
+
+    if ($action === 'delete_bill') {
+
+        $bill_id = filter_input(INPUT_POST, 'bill_id', FILTER_VALIDATE_INT);
+
+        if ($bill_id === false || $bill_id === null || $bill_id <= 0) {
+
+            throw new InvalidArgumentException('Invalid bill.');
+        }
+
+        $exists = SQL()->select("
+            SELECT id
+            FROM bills
+            WHERE id = " . (int) $bill_id . "
+            LIMIT 1
+        ");
+
+        if ($exists === []) {
+
+            throw new InvalidArgumentException('The selected bill does not exist.');
+        }
+
+        Delete()
+            ->from('bills')
+            ->where('id = ' . (int) $bill_id);
+
+        echo json_encode([
+            'ok' => true,
+            'message' => 'Bill deleted.',
+            'groups' => bills_group_options_payload(),
+        ]);
+        exit;
+    }
+
+    if ($action === 'bulk_delete_bills') {
+
+        $payload = bills_create_bulk_action_payload_from_request($_POST);
+        $where = bills_build_where($payload['filters'], [
+            'selected_ids' => $payload['selected_ids'],
+        ]);
+
+        $count_rows = SQL()->select("
+            SELECT COUNT(*) AS total
+            FROM bills
+            WHERE " . $where . "
+        ");
+        $total = (int) ($count_rows[0]['total'] ?? 0);
+
+        if ($total <= 0) {
+
+            throw new InvalidArgumentException('No bills found to delete.');
+        }
+
+        SQL()->query("
+            DELETE FROM bills
+            WHERE " . $where . "
+        ");
+
+        echo json_encode([
+            'ok' => true,
+            'message' => $total === 1 ? '1 bill deleted.' : ($total . ' bills deleted.'),
+            'deleted_count' => $total,
         ]);
         exit;
     }
@@ -436,7 +386,7 @@ catch (Throwable $exception) {
     http_response_code(500);
     echo json_encode([
         'ok' => false,
-        'error' => 'Internal error.',
+        'error' => 'Errore interno.',
     ]);
     exit;
 }
