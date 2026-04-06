@@ -87,6 +87,8 @@ function history_dashboard_view_mode($value): string
 function history_dashboard_filters_for_view(array $filters, string $today, string $view_mode): array
 {
 
+    $tomorrow = (new DateTimeImmutable($today))->modify('+1 day')->format('Y-m-d');
+
     if ($view_mode === 'current_outcomes') {
 
         $view_filters = $filters;
@@ -108,9 +110,9 @@ function history_dashboard_filters_for_view(array $filters, string $today, strin
     $view_filters = $filters;
     $view_filters['data']['all'] = false;
 
-    if (empty($view_filters['data']['da']) || $view_filters['data']['da'] < $today) {
+    if (empty($view_filters['data']['da']) || $view_filters['data']['da'] < $tomorrow) {
 
-        $view_filters['data']['da'] = $today;
+        $view_filters['data']['da'] = $tomorrow;
     }
 
     return $view_filters;
