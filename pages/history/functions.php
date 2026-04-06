@@ -12,6 +12,10 @@ function history_available_tabs(): array
             'id' => 'historic',
             'label' => 'Historic',
         ],
+        'extra_income' => [
+            'id' => 'extra_income',
+            'label' => 'Extra income',
+        ],
         'dashboard' => [
             'id' => 'dashboard',
             'label' => 'Dashboard',

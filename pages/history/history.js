@@ -4,6 +4,7 @@ window.PageModules['history'] = (function () {
 
     const TAB_SCRIPTS = {
         historic: '/my-bills/pages/history/historic/historic.js',
+        extra_income: '/my-bills/pages/history/extra_income/extra_income.js',
         dashboard: '/my-bills/pages/history/dashboard/dashboard.js'
     };
 
@@ -105,7 +106,18 @@ window.PageModules['history'] = (function () {
                 $.getScript(scriptUrl)
                     .done(() => {
 
-                        const module = tab === 'historic' ? window.HistoryHistoricTabModule : window.HistoryDashboardTabModule;
+                        let module = null;
+
+                        if (tab === 'historic') {
+
+                            module = window.HistoryHistoricTabModule;
+                        } else if (tab === 'extra_income') {
+
+                            module = window.HistoryExtraIncomeTabModule;
+                        } else {
+
+                            module = window.HistoryDashboardTabModule;
+                        }
 
                         if (!module || typeof module.init !== 'function') {
 

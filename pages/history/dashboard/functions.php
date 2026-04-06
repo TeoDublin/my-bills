@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../../includes/class.php';
 require_once __DIR__ . '/../../../includes/functions.php';
 require_once __DIR__ . '/../historic/functions.php';
 require_once __DIR__ . '/../../montly/income/functions.php';
+require_once __DIR__ . '/../extra_income/functions.php';
 
 function history_dashboard_name_options(): array
 {
@@ -31,6 +32,15 @@ function history_dashboard_card_totals(array $filters, string $today): array
 
     $base_where = bills_build_where($filters);
     $income_entry = income_current_entry();
+    $extra_income_rows = SQL()->select("
+        SELECT COALESCE(SUM(value), 0) AS total
+        FROM extra_incomes
+        WHERE " . extra_income_build_where([
+            'name' => [],
+            'data' => $filters['data'],
+        ]) . "
+    ");
+    $income_total = (float) ($income_entry['value'] ?? 0) + (float) ($extra_income_rows[0]['total'] ?? 0);
 
     $outcomes_rows = SQL()->select("
         SELECT COALESCE(SUM(value), 0) AS total
@@ -53,13 +63,13 @@ function history_dashboard_card_totals(array $filters, string $today): array
     ");
 
     return [
-        'income' => (float) ($income_entry['value'] ?? 0),
+        'income' => $income_total,
         'outcomes' => (float) ($outcomes_rows[0]['total'] ?? 0),
         'next_outcomes' => (float) ($next_outcomes_rows[0]['total'] ?? 0),
         'current_outcomes' => (float) ($current_outcomes_rows[0]['total'] ?? 0),
-        'current_balance' => (float) ($income_entry['value'] ?? 0)
+        'current_balance' => $income_total
             - (float) ($current_outcomes_rows[0]['total'] ?? 0),
-        'projected_balance' => (float) ($income_entry['value'] ?? 0)
+        'projected_balance' => $income_total
             - (float) ($outcomes_rows[0]['total'] ?? 0),
     ];
 
