@@ -4,6 +4,8 @@ window.PageModules['history'] = (function () {
 
     const MODAL_IDS = [
         'history_page_setup_modal',
+        'history_add_bill_modal',
+        'history_group_manage_modal',
         'history_export_setup_modal',
         'history_grid_import_modal',
         'history_action_progress_modal'
@@ -19,6 +21,7 @@ window.PageModules['history'] = (function () {
             listeners: [],
             hoistedModals: [],
             pollTimer: null,
+            reopenAddBillModalAfterGroupManage: false,
 
             init: function (context) {
 
@@ -26,6 +29,7 @@ window.PageModules['history'] = (function () {
                 this.listeners = [];
                 this.hoistedModals = [];
                 this.pollTimer = null;
+                this.reopenAddBillModalAfterGroupManage = false;
 
                 this.hoistPageModals();
                 this.cacheDom();
@@ -79,6 +83,7 @@ window.PageModules['history'] = (function () {
                 this.listeners = [];
                 this.hoistedModals = [];
                 this.pollTimer = null;
+                this.reopenAddBillModalAfterGroupManage = false;
             },
 
             hoistPageModals: function () {
@@ -110,6 +115,10 @@ window.PageModules['history'] = (function () {
                     clearFiltersButton: document.querySelector('[data-action="clear-filters"]'),
                     applyFiltersButton: document.querySelector('[data-action="apply-filters"]'),
                     saveSetupButton: document.querySelector('[data-action="save-setup"]'),
+                    saveBillButton: document.querySelector('[data-action="save-bill"]'),
+                    openGroupManagerButton: document.querySelector('[data-action="open-group-manager"]'),
+                    createGroupButton: document.querySelector('[data-action="create-group"]'),
+                    renameGroupButton: document.querySelector('[data-action="rename-group"]'),
                     runPageActionButton: document.querySelector('[data-action="run-page-action"]'),
                     confirmExportSetupButton: document.querySelector('[data-action="confirm-export-setup"]'),
                     confirmGridExportButton: document.querySelector('[data-action="confirm-grid-export"]'),
@@ -122,6 +131,13 @@ window.PageModules['history'] = (function () {
                     gridImportFileInput: document.getElementById('grid_import_file'),
                     rowsPerPageInput: document.getElementById('rows_per_page'),
                     tableFontSizeInput: document.getElementById('table_font_size'),
+                    billGroupSelect: document.getElementById('history_bill_group_id'),
+                    billNameInput: document.getElementById('history_bill_name'),
+                    billValueInput: document.getElementById('history_bill_value'),
+                    billDateInput: document.getElementById('history_bill_date'),
+                    newGroupNameInput: document.getElementById('history_new_group_name'),
+                    manageGroupSelect: document.getElementById('history_manage_group_id'),
+                    manageGroupNameInput: document.getElementById('history_manage_group_name'),
                     progressModalElement: progressModalElement,
                     progressTitle: progressModalElement ? progressModalElement.querySelector('[data-progress-title]') : null,
                     progressBar: progressModalElement ? progressModalElement.querySelector('[data-progress-bar]') : null,
@@ -134,6 +150,8 @@ window.PageModules['history'] = (function () {
                 this.modals = {
 
                     setup: this.getModalInstance('history_page_setup_modal'),
+                    addBill: this.getModalInstance('history_add_bill_modal'),
+                    groupManage: this.getModalInstance('history_group_manage_modal'),
                     exportSetup: this.getModalInstance('history_export_setup_modal'),
                     gridImport: this.getModalInstance('history_grid_import_modal'),
                     progress: this.getModalInstance('history_action_progress_modal')
@@ -222,13 +240,29 @@ window.PageModules['history'] = (function () {
                 this.bindClick(this.dom.clearFiltersButton, () => this.clearFilters());
                 this.bindClick(this.dom.applyFiltersButton, () => this.applyFilters());
                 this.bindClick(this.dom.saveSetupButton, () => this.saveSetup());
+                this.bindClick(this.dom.saveBillButton, () => this.createBill());
+                this.bindClick(this.dom.openGroupManagerButton, () => this.openGroupManager());
+                this.bindClick(this.dom.createGroupButton, () => this.createGroup());
+                this.bindClick(this.dom.renameGroupButton, () => this.renameGroup());
                 this.bindClick(this.dom.runPageActionButton, () => this.runPageAction());
                 this.bindClick(this.dom.confirmExportSetupButton, () => this.confirmExportSetup());
                 this.bindClick(this.dom.confirmGridExportButton, () => this.startGridExport());
                 this.bindClick(this.dom.closeProgressButton, () => this.closeProgressModal());
+                this.bindListener(this.dom.manageGroupSelect, 'change', () => this.syncManageGroupName());
+                this.bindListener(document.getElementById('history_group_manage_modal'), 'hidden.bs.modal', () => {
+
+                    if (!this.reopenAddBillModalAfterGroupManage) {
+
+                        return;
+                    }
+
+                    this.reopenAddBillModalAfterGroupManage = false;
+                    this.showModal(this.modals.addBill);
+                });
 
                 this.bindPagination();
                 this.bindTableSelection();
+                this.syncManageGroupName();
             },
 
             bindClick: function (element, handler) {
@@ -372,6 +406,258 @@ window.PageModules['history'] = (function () {
                 }
 
                 this.confirmExportSetup();
+            },
+
+            openGroupManager: function () {
+
+                const addBillModalElement = document.getElementById('history_add_bill_modal');
+                const addBillIsOpen = addBillModalElement ? addBillModalElement.classList.contains('show') : false;
+
+                this.reopenAddBillModalAfterGroupManage = addBillIsOpen;
+
+                if (addBillIsOpen) {
+
+                    this.hideModal(this.modals.addBill);
+                }
+
+                this.syncManageGroupName();
+                this.showModal(this.modals.groupManage);
+            },
+
+            createBill: function () {
+
+                const groupId = this.dom.billGroupSelect ? this.dom.billGroupSelect.value : '';
+                const name = this.dom.billNameInput ? this.dom.billNameInput.value.trim() : '';
+                const value = this.dom.billValueInput ? this.dom.billValueInput.value.trim() : '';
+                const date = this.dom.billDateInput ? this.dom.billDateInput.value : '';
+
+                if (groupId === '') {
+
+                    this.context.app.showFail('Seleziona un gruppo');
+                    return;
+                }
+
+                if (name === '') {
+
+                    this.context.app.showFail('Inserisci il nome del bill');
+                    return;
+                }
+
+                if (value === '' || Number.isNaN(Number(value)) || Number(value) < 0) {
+
+                    this.context.app.showFail('Inserisci un valore valido');
+                    return;
+                }
+
+                if (date === '') {
+
+                    this.context.app.showFail('Inserisci una data valida');
+                    return;
+                }
+
+                this.postHistoryManageAction({
+                    action: 'create_bill',
+                    group_id: groupId,
+                    name: name,
+                    value: value,
+                    date: date
+                }, (response) => {
+
+                    this.applyGroupOptions(response.groups || [], groupId);
+                    this.resetBillForm();
+                    this.hideModal(this.modals.addBill);
+                    this.context.app.showSuccess(response.message || 'Bill creato');
+                    this.context.app.reloadCurrentPage(this.context.params || {});
+                });
+            },
+
+            createGroup: function () {
+
+                const name = this.dom.newGroupNameInput ? this.dom.newGroupNameInput.value.trim() : '';
+
+                if (name === '') {
+
+                    this.context.app.showFail('Inserisci il nome del gruppo');
+                    return;
+                }
+
+                this.postHistoryManageAction({
+                    action: 'create_group',
+                    name: name
+                }, (response) => {
+
+                    const selectedGroupId = response.group_id ? String(response.group_id) : '';
+
+                    this.applyGroupOptions(response.groups || [], selectedGroupId);
+
+                    if (this.dom.newGroupNameInput) {
+
+                        this.dom.newGroupNameInput.value = '';
+                    }
+
+                    this.syncManageGroupName();
+                    this.context.app.showSuccess(response.message || 'Gruppo creato');
+                });
+            },
+
+            renameGroup: function () {
+
+                const groupId = this.dom.manageGroupSelect ? this.dom.manageGroupSelect.value : '';
+                const name = this.dom.manageGroupNameInput ? this.dom.manageGroupNameInput.value.trim() : '';
+
+                if (groupId === '') {
+
+                    this.context.app.showFail('Seleziona un gruppo');
+                    return;
+                }
+
+                if (name === '') {
+
+                    this.context.app.showFail('Inserisci il nuovo nome del gruppo');
+                    return;
+                }
+
+                this.postHistoryManageAction({
+                    action: 'rename_group',
+                    group_id: groupId,
+                    name: name
+                }, (response) => {
+
+                    this.applyGroupOptions(response.groups || [], groupId);
+                    this.syncManageGroupName();
+                    this.context.app.showSuccess(response.message || 'Gruppo aggiornato');
+                });
+            },
+
+            postHistoryManageAction: function (payload, onSuccess) {
+
+                const csrfToken = this.dom.actionsRoot ? (this.dom.actionsRoot.dataset.csrfToken || '') : '';
+
+                $.ajax({
+
+                    url: '/my-bills/pages/history/manage.php',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        csrf_token: csrfToken,
+                        ...payload
+                    }
+                })
+                .done((response) => {
+
+                    if (!response || response.ok !== true) {
+
+                        this.context.app.showFail((response && response.error) || 'Operazione non riuscita');
+                        return;
+                    }
+
+                    if (typeof onSuccess === 'function') {
+
+                        onSuccess(response);
+                    }
+                })
+                .fail((jqXHR) => {
+
+                    this.context.app.showFail(this.readAjaxError(jqXHR, 'Operazione non riuscita'));
+                });
+            },
+
+            applyGroupOptions: function (groups, selectedGroupId = '') {
+
+                if (!Array.isArray(groups) || groups.length === 0) {
+
+                    return;
+                }
+
+                const normalizedSelectedGroupId = selectedGroupId !== '' ? String(selectedGroupId) : '';
+                const selectedFilterGroups = ($('#group').val() || []).map((value) => String(value));
+
+                document.querySelectorAll('[data-history-group-select]').forEach((select) => {
+
+                    const currentValue = select.value ? String(select.value) : '';
+                    const nextValue = normalizedSelectedGroupId || currentValue;
+
+                    select.innerHTML = groups.map((group) => {
+
+                        const id = String(group.id || '');
+                        const name = this.escapeHtml(group.name || '');
+                        const isSelected = id !== '' && id === nextValue ? ' selected' : '';
+
+                        return `<option value="${id}"${isSelected}>${name}</option>`;
+                    }).join('');
+                });
+
+                const groupFilterSelect = document.getElementById('group');
+
+                if (groupFilterSelect) {
+
+                    groupFilterSelect.innerHTML = groups.map((group) => {
+
+                        const id = String(group.id || '');
+                        const name = this.escapeHtml(group.name || '');
+                        const isSelected = selectedFilterGroups.includes(id) ? ' selected' : '';
+
+                        return `<option value="${id}"${isSelected}>${name}</option>`;
+                    }).join('');
+
+                    this.refreshMultiSelect(groupFilterSelect);
+                }
+            },
+
+            syncManageGroupName: function () {
+
+                if (!this.dom.manageGroupSelect || !this.dom.manageGroupNameInput) {
+
+                    return;
+                }
+
+                const selectedOption = this.dom.manageGroupSelect.selectedOptions[0];
+                this.dom.manageGroupNameInput.value = selectedOption ? selectedOption.textContent.trim() : '';
+            },
+
+            resetBillForm: function () {
+
+                if (this.dom.billNameInput) {
+
+                    this.dom.billNameInput.value = '';
+                }
+
+                if (this.dom.billValueInput) {
+
+                    this.dom.billValueInput.value = '';
+                }
+            },
+
+            escapeHtml: function (value) {
+
+                return String(value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            },
+
+            refreshMultiSelect: function (select) {
+
+                if (!(select instanceof HTMLSelectElement)) {
+
+                    return;
+                }
+
+                const picker = select.nextElementSibling;
+
+                if (picker && picker.classList.contains('crm-multi-picker')) {
+
+                    picker.remove();
+                }
+
+                delete select.dataset.crmMultiReady;
+
+                if (window.CrmMultiSelect && typeof window.CrmMultiSelect.init === 'function') {
+
+                    window.CrmMultiSelect.init(select.parentNode || document);
+                }
             },
 
             confirmExportSetup: function () {

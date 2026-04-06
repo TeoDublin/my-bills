@@ -105,6 +105,29 @@ function bills_create_select(string $select = '*'): Select
 
 }
 
+function bills_group_options(): array
+{
+
+    return Select('*')
+        ->from('bills_groups')
+        ->orderby('name asc')
+        ->get();
+
+}
+
+function bills_group_options_payload(): array
+{
+
+    return array_values(array_map(
+        static fn (array $group): array => [
+            'id' => (int) ($group['id'] ?? 0),
+            'name' => trim(string_value($group['name'] ?? '')),
+        ],
+        bills_group_options()
+    ));
+
+}
+
 function bills_fetch_rows(array $filters, array $options = [], ?int $limit = null, ?int $offset = null, string $select = '*'): array
 {
 

@@ -52,10 +52,7 @@ if (isset($_GET['table_font_size'])) {
     Preference()->set($user_id, 'table_font_size', $table_font_size, $preferences_scope);
 }
 
-$group_options = Select('*')
-    ->from('bills_groups')
-    ->orderby('name asc')
-    ->get();
+$group_options = bills_group_options();
 
 $group_names_by_id = [];
 foreach ($group_options as $group_option) {
@@ -121,6 +118,10 @@ $page_state = [
     'name_options' => $name_options,
     'export_kinds' => bills_export_scopes(),
     'export_types' => bills_export_type_options(),
+    'bill_form_defaults' => [
+        'date' => $today,
+        'group_id' => (int) ($group_options[0]['id'] ?? 0),
+    ],
     'results' => $results,
     'pagination' => [
         'current_page' => $current_page,
@@ -143,6 +144,7 @@ $selected_name_labels = $page_state['selected_name_labels'];
 $table_font_size = (int) ($display_preferences['table_font_size'] ?? 12);
 $line_height = max(16, $table_font_size + 6);
 $header_line_height = max(18, $table_font_size + 8);
+$bill_form_defaults = $page_state['bill_form_defaults'];
 $has_filter_labels = !$filters['data']['all']
     || !empty($selected_group_labels)
     || !empty($selected_name_labels);
@@ -213,7 +215,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
             data-history-actions
             data-csrf-token="<?= htmlspecialchars(csrf_token()) ?>"
         >
-            <div class="d-flex">
+            <div class="d-flex gap-2 flex-wrap">
                 <button
                     class="btn btn-outline-secondary"
                     type="button"
@@ -223,6 +225,15 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                     aria-controls="history_actions_collapse"
                 >
                     Azioni
+                </button>
+
+                <button
+                    class="btn btn-primary"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#history_add_bill_modal"
+                >
+                    Aggiungi Bill
                 </button>
             </div>
 
@@ -523,6 +534,111 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annulla</button>
                 <button type="button" class="btn btn-primary" data-action="save-setup">Salva</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="history_add_bill_modal" tabindex="-1" aria-labelledby="history_add_bill_modal_label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="history_add_bill_modal_label">Nuovo bill</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="history_bill_group_id">Gruppo</label>
+                        <div class="d-flex gap-2 align-items-start">
+                            <select class="form-select" id="history_bill_group_id" data-history-group-select>
+                                <?php foreach ($group_options as $group_option): ?>
+
+                                    <option
+                                        value="<?= (int) $group_option['id'] ?>"
+                                        <?= (int) $group_option['id'] === (int) $bill_form_defaults['group_id'] ? 'selected' : '' ?>
+                                    >
+                                        <?= htmlspecialchars($group_option['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+
+                            <button
+                                class="btn btn-outline-secondary flex-shrink-0"
+                                type="button"
+                                data-action="open-group-manager"
+                            >
+                                Gestisci gruppi
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="history_bill_name">Nome</label>
+                        <input class="form-control" id="history_bill_name" type="text" maxlength="255" placeholder="Bill name">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="history_bill_value">Valore</label>
+                        <input class="form-control" id="history_bill_value" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="history_bill_date">Data</label>
+                        <input class="form-control" id="history_bill_date" type="date" value="<?= htmlspecialchars($bill_form_defaults['date']) ?>">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Chiudi</button>
+                <button type="button" class="btn btn-primary" data-action="save-bill">Salva bill</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="history_group_manage_modal" tabindex="-1" aria-labelledby="history_group_manage_modal_label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="history_group_manage_modal_label">Gestione gruppi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="history_new_group_name">Nuovo gruppo</label>
+                        <div class="d-flex gap-2">
+                            <input class="form-control" id="history_new_group_name" type="text" maxlength="120" placeholder="Nome gruppo">
+                            <button type="button" class="btn btn-primary flex-shrink-0" data-action="create-group">Crea</button>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <hr class="my-1">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="history_manage_group_id">Modifica gruppo</label>
+                        <select class="form-select" id="history_manage_group_id" data-history-group-select>
+                            <?php foreach ($group_options as $group_option): ?>
+
+                                <option value="<?= (int) $group_option['id'] ?>"><?= htmlspecialchars($group_option['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="history_manage_group_name">Nuovo nome</label>
+                        <div class="d-flex gap-2">
+                            <input class="form-control" id="history_manage_group_name" type="text" maxlength="120" placeholder="Nuovo nome gruppo">
+                            <button type="button" class="btn btn-outline-primary flex-shrink-0" data-action="rename-group">Salva modifica</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
