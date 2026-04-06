@@ -11,7 +11,7 @@ function app_pages(): array
         'montly' => [
             'id' => 'montly',
             'label' => 'Monthly',
-            'icon' => 'calendar-plus.svg',
+            'icon' => 'clipboard.svg',
             'endpoint' => url('pages/montly/montly.php'),
             'script' => asset('pages/montly/montly.js'),
             'style' => asset('pages/montly/montly.css'),
@@ -19,7 +19,7 @@ function app_pages(): array
         'history' => [
             'id' => 'history',
             'label' => 'History',
-            'icon' => 'bill-check.svg',
+            'icon' => 'coin.svg',
             'endpoint' => url('pages/history/history.php'),
             'script' => asset('pages/history/history.js'),
             'style' => asset('pages/history/history.css'),

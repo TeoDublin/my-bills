@@ -9,8 +9,6 @@ $success_message = $session->pull_flash('success');
 $last_username = $session->pull_flash('last_username', $_GET['username'] ?? '');
 $forgot_view_open = (bool) $session->pull_flash('forgot_panel_open', false);
 $page_theme = $page_theme ?? theme();
-$login_image = root('assets/images/login-' . $page_theme . '.svg');
-$login_imageUrl = file_exists($login_image) ? image('login-' . $page_theme . '.svg') : image('login-dark.svg');
 ?>
 <!doctype html>
 <html lang="en">
@@ -19,23 +17,35 @@ $login_imageUrl = file_exists($login_image) ? image('login-' . $page_theme . '.s
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <link rel="stylesheet" href="<?= asset('assets/css/bootstrap-5.3.3.css') ?>">
         <link rel="stylesheet" href="<?= asset('assets/css/style.css') ?>">
-        <link rel="stylesheet" href="<?= url('templates/login/login.css') ?>">
+        <link rel="stylesheet" href="<?= asset('templates/login/login.css') ?>">
         <link rel="icon" href="<?= asset('favicon.ico') ?>">
-        <script src="<?= url('templates/login/login.js') ?>"></script>
+        <script src="<?= asset('templates/login/login.js') ?>"></script>
         <title><?= title() ?> Login</title>
     </head>
     <body data-bs-theme="<?= htmlspecialchars($page_theme) ?>" class="auth-page">
+        <div class="auth-background" aria-hidden="true">
+            <div class="auth-background-wave auth-background-wave-a"></div>
+            <div class="auth-background-wave auth-background-wave-b"></div>
+            <div class="auth-background-grid"></div>
+            <div class="auth-background-particles">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
         <div class="auth-shell">
             <div class="auth-card">
-                <div class="auth-visual">
-                    <img src="<?= $login_imageUrl ?>" alt="<?= title() ?> login">
-                </div>
-
                 <div class="auth-panel">
                     <div class="auth-header">
                         <img src="<?= image('logo-' . $page_theme . '.svg') ?>" alt="<?= title() ?>" class="auth-logo">
+                        <span class="auth-kicker">Personal finance</span>
                         <h1 class="h3 mb-1">Welcome back</h1>
-                        <p class="text-secondary mb-0">Sign in to continue working inside the CRM.</p>
+                        <p class="text-secondary mb-0">Sign in to continue.</p>
                     </div>
 
                     <div class="auth-alerts">
