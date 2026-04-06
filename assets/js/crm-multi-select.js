@@ -10,11 +10,11 @@
     function summaryLabel(select) {
 
         const selectedOptions = Array.from(select.selectedOptions).map((option) => option.textContent.trim());
-        const baseLabel = select.dataset.searchPlaceholder || select.getAttribute('aria-label') || 'valori';
+        const baseLabel = select.dataset.searchPlaceholder || select.getAttribute('aria-label') || 'values';
 
         if (selectedOptions.length === 0) {
 
-            return `Seleziona ${baseLabel}`;
+            return `Select ${baseLabel}`;
         }
 
         if (selectedOptions.length <= 2) {
@@ -22,7 +22,7 @@
             return selectedOptions.join(', ');
         }
 
-        return `${selectedOptions.length} selezionati`;
+        return `${selectedOptions.length} selected`;
     }
 
     function syncSelect(select, summary, list) {
@@ -94,7 +94,7 @@
         const search = document.createElement('input');
         search.type = 'text';
         search.className = 'crm-multi-picker-search';
-        search.placeholder = `Cerca in ${select.dataset.searchPlaceholder || 'valori'}`;
+        search.placeholder = `Search in ${select.dataset.searchPlaceholder || 'values'}`;
 
         searchWrap.appendChild(search);
 
@@ -104,12 +104,12 @@
         const selectAllButton = document.createElement('button');
         selectAllButton.type = 'button';
         selectAllButton.className = 'crm-multi-picker-action';
-        selectAllButton.textContent = 'Seleziona tutto';
+        selectAllButton.textContent = 'Select all';
 
         const clearButton = document.createElement('button');
         clearButton.type = 'button';
         clearButton.className = 'crm-multi-picker-action';
-        clearButton.textContent = 'Pulisci';
+        clearButton.textContent = 'Clear';
 
         actions.appendChild(selectAllButton);
         actions.appendChild(clearButton);
@@ -256,4 +256,3 @@
         closeAll: closeAll
     };
 }(window, document));
-

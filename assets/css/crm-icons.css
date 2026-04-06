@@ -12,7 +12,7 @@
     fill: green!important;
 }
 
-[data-bs-theme="dark"] svg.fail{
+[data-bs-theme="dark"] svg.fail,[data-bs-theme="dark"] svg.danger{
     fill: red!important;
 }
 
@@ -25,6 +25,6 @@
     fill: green!important;
 }
 
-[data-bs-theme="light"] svg.fail{
+[data-bs-theme="light"] svg.fail, [data-bs-theme="light"] svg.danger{
     fill: red!important;
 }

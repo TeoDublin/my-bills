@@ -11,7 +11,7 @@ $menu_items = app_pages();
 $current_page = app_page()['id'];
 ?>
 <!doctype html>
-<html lang="it">
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -34,10 +34,10 @@ $current_page = app_page()['id'];
                 <div class="toast-header p-0 m-0">
                     <div class="d-flex justify-content-start align-content-center" style="height:40px!important">
                         <div class="p-2"><?= icon('square.svg', 'success', 20, 20) ?></div>
-                        <div class="p-2"><h4 class="m-0">Riuscito</h4></div>
+                        <div class="p-2"><h4 class="m-0">Success</h4></div>
                     </div>
                 </div>
-                <div class="toast-body">Dati aggiornati con successo</div>
+                <div class="toast-body">Data updated successfully</div>
             </div>
         </div>
 
@@ -46,19 +46,19 @@ $current_page = app_page()['id'];
                 <div class="toast-header p-0 m-0">
                     <div class="d-flex justify-content-start align-content-center flex-fill" style="height:40px!important">
                         <div class="p-2"><?= icon('square.svg', 'fail', 20, 20) ?></div>
-                        <div class="p-2"><h4 class="m-0">Non Riuscito</h4></div>
+                        <div class="p-2"><h4 class="m-0">Failed</h4></div>
                         <div class="ms-auto align-content-center">
                             <button type="button" class="btn-close me-1 p-2" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                     </div>
                 </div>
-                <div class="toast-body">Riprova</div>
+                <div class="toast-body">Please try again</div>
             </div>
         </div>
 
         <div class="d-flex flex-column min-vh-100 app-shell">
             <div class="d-flex flex-row w-100 sticky-top app-shell-header" style="height:70px;">
-                <div class="layout-header-left d-flex align-items-center justify-content-center" id="menuToggle" data-header-left role="button" tabindex="0" aria-label="Apri o chiudi il menu laterale">
+                <div class="layout-header-left d-flex align-items-center justify-content-center" id="menuToggle" data-header-left role="button" tabindex="0" aria-label="Open or close the side menu">
                     <div class="menu-icon" role="presentation">
                         <span id="menuIcon" class="m-auto">
                             <?= icon('greater.svg', 'primary', 30, 30) ?>
@@ -85,7 +85,7 @@ $current_page = app_page()['id'];
                                 <ul class="dropdown-menu dots-dropdown">
                                     <li>
                                         <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#appPreferencesModal">
-                                            Preferenze
+                                            Preferences
                                         </button>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
@@ -134,16 +134,16 @@ $current_page = app_page()['id'];
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="appPreferencesModalLabel">Preferenze</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                        <h5 class="modal-title" id="appPreferencesModalLabel">Preferences</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
                     <div class="modal-body">
                         <div class="card border-0 shadow-sm">
                             <div class="card-body">
                                 <div class="mb-3">
-                                    <h6 class="mb-1">Tema</h6>
-                                    <p class="text-muted mb-0">Scegli l'aspetto dell'applicazione.</p>
+                                    <h6 class="mb-1">Theme</h6>
+                                    <p class="text-muted mb-0">Choose the application appearance.</p>
                                 </div>
 
                                 <div class="preferences-theme-list">
@@ -159,7 +159,7 @@ $current_page = app_page()['id'];
                                                     data-theme-option
                                                     <?= theme() === 'light' ? 'checked' : '' ?>
                                                 >
-                                                <span class="form-check-label fw-semibold">Tema chiaro</span>
+                                                <span class="form-check-label fw-semibold">Light theme</span>
                                             </div>
                                         </div>
                                     </label>
@@ -176,7 +176,7 @@ $current_page = app_page()['id'];
                                                     data-theme-option
                                                     <?= theme() === 'dark' ? 'checked' : '' ?>
                                                 >
-                                                <span class="form-check-label fw-semibold">Tema scuro</span>
+                                                <span class="form-check-label fw-semibold">Dark theme</span>
                                             </div>
                                         </div>
                                     </label>
@@ -186,8 +186,8 @@ $current_page = app_page()['id'];
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annulla</button>
-                        <button type="button" class="btn btn-primary" data-action="save-theme-preferences">Salva</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" data-action="save-theme-preferences">Save</button>
                     </div>
                 </div>
             </div>

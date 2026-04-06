@@ -161,40 +161,40 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
 <div class="page-history">
     <div class="page-section-sticky">
         <div class="filter-labels d-flex flex-row align-items-center bg-light p-2<?= $has_filter_labels ? '' : ' none' ?>">
-            <span class="fw-bold">FILTRI APPLICATI:</span>
+            <span class="fw-bold">APPLIED FILTERS:</span>
 
             <?php if (!$filters['data']['all'] && !empty($filters['data']['da'])): ?>
 
                 <div class="filter-label bg-gray text-white">
-                    <span>Da: <?= htmlspecialchars(unformat_date($filters['data']['da'])) ?></span>
-                    <button class="filter-label-remove" type="button" data-remove-filter="data_da" aria-label="Rimuovi filtro data da">&times;</button>
+                    <span>From: <?= htmlspecialchars(unformat_date($filters['data']['da'])) ?></span>
+                    <button class="filter-label-remove" type="button" data-remove-filter="data_da" aria-label="Remove from date filter">&times;</button>
                 </div>
             <?php endif; ?>
 
             <?php if (!$filters['data']['all'] && !empty($filters['data']['a'])): ?>
 
                 <div class="filter-label bg-gray text-white">
-                    <span>A: <?= htmlspecialchars(unformat_date($filters['data']['a'])) ?></span>
-                    <button class="filter-label-remove" type="button" data-remove-filter="data_a" aria-label="Rimuovi filtro data a">&times;</button>
+                    <span>To: <?= htmlspecialchars(unformat_date($filters['data']['a'])) ?></span>
+                    <button class="filter-label-remove" type="button" data-remove-filter="data_a" aria-label="Remove to date filter">&times;</button>
                 </div>
             <?php endif; ?>
 
             <?php if (!empty($selected_group_labels)): ?>
 
                 <div class="filter-label bg-gray text-white">
-                    <span>Gruppo: <?= htmlspecialchars($selected_group_names_summary) ?></span>
-                    <button class="filter-label-remove" type="button" data-remove-filter="group" aria-label="Rimuovi filtro gruppo">&times;</button>
+                    <span>Group: <?= htmlspecialchars($selected_group_names_summary) ?></span>
+                    <button class="filter-label-remove" type="button" data-remove-filter="group" aria-label="Remove group filter">&times;</button>
                 </div>
             <?php endif; ?>
 
             <?php if (!empty($selected_name_labels)): ?>
 
                 <div class="filter-label filter-label-clients bg-gray text-white">
-                    <span class="filter-label-summary">Nome: <?= htmlspecialchars($selected_name_summary) ?></span>
+                    <span class="filter-label-summary">Name: <?= htmlspecialchars($selected_name_summary) ?></span>
                     <div class="filter-label-popover">
                         <div class="filter-label-popover-header">
-                            <div class="filter-label-popover-title">Nomi selezionati</div>
-                            <button class="filter-label-popover-close" type="button" data-close-filter-popover aria-label="Chiudi elenco nomi">&times;</button>
+                            <div class="filter-label-popover-title">Selected names</div>
+                            <button class="filter-label-popover-close" type="button" data-close-filter-popover aria-label="Close name list">&times;</button>
                         </div>
                         <ul class="filter-label-popover-list">
                             <?php foreach ($selected_name_labels as $selected_name_label): ?>
@@ -203,11 +203,11 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                             <?php endforeach; ?>
                         </ul>
                     </div>
-                    <button class="filter-label-remove" type="button" data-remove-filter="name" aria-label="Rimuovi filtro nome">&times;</button>
+                    <button class="filter-label-remove" type="button" data-remove-filter="name" aria-label="Remove name filter">&times;</button>
                 </div>
             <?php endif; ?>
 
-            <button class="btn btn-primary ms-auto" data-action="clear-filters">Pulisci Filtri</button>
+            <button class="btn btn-primary ms-auto" data-action="clear-filters">Clear Filters</button>
         </div>
 
         <div
@@ -224,16 +224,15 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                     aria-expanded="false"
                     aria-controls="history_actions_collapse"
                 >
-                    Azioni
+                    Actions
                 </button>
 
                 <button
                     class="btn btn-primary"
                     type="button"
-                    data-bs-toggle="modal"
-                    data-bs-target="#history_add_bill_modal"
+                    data-action="open-bill-create"
                 >
-                    Aggiungi Bill
+                    Add Bill
                 </button>
             </div>
 
@@ -242,7 +241,8 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                     <div class="d-flex align-items-end" style="width: 600px; max-width: 100%;">
                         <div class="w-40">
                             <select name="actions" class="form-select">
-                                <option value="export">Esporta</option>
+                                <option value="export">Export</option>
+                                <option value="delete">Delete</option>
                             </select>
                         </div>
 
@@ -269,8 +269,8 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#history_page_setup_modal"
-                aria-label="Apri impostazioni tabella"
-                title="Impostazioni tabella"
+                aria-label="Open table settings"
+                title="Table settings"
             >
                 <?= icon('gear.svg', 'primary', '18', '18') ?>
             </button>
@@ -278,7 +278,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
 
         <?php if (!$results->result): ?>
 
-            <div class="card card-body mt-3 text-center"><h5>Non trovato</h5></div>
+            <div class="card card-body mt-3 text-center"><h5>No results found</h5></div>
         <?php else: ?>
 
             <div class="page-section-sticky-scroll px-1">
@@ -291,18 +291,38 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                             <th class="w-30">name</th>
                             <th class="w-15">value</th>
                             <th class="w-20-date">date</th>
+                            <th class="w-10">actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($results->result as $bill): ?>
 
-                            <tr data-id="<?= (int) $bill['id'] ?>" style="font-size:<?= $table_font_size ?>px;line-height:<?= $line_height ?>px;word-break:break-word;">
+                            <tr
+                                data-id="<?= (int) $bill['id'] ?>"
+                                data-group-id="<?= (int) $bill['id_group'] ?>"
+                                data-name="<?= htmlspecialchars(string_value($bill['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                data-value="<?= htmlspecialchars(number_format((float) $bill['value'], 2, '.', ''), ENT_QUOTES, 'UTF-8') ?>"
+                                data-date="<?= htmlspecialchars(string_value($bill['date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                style="font-size:<?= $table_font_size ?>px;line-height:<?= $line_height ?>px;word-break:break-word;cursor:pointer;"
+                            >
                                 <td data-table-row-select-cell><input type="checkbox" data-table-row-select></td>
                                 <td><?= (int) $bill['id'] ?></td>
                                 <td><?= htmlspecialchars(string_value($bill['group_name'] ?? '-')) ?></td>
                                 <td><?= htmlspecialchars(string_value($bill['name'] ?? '')) ?></td>
                                 <td><?= htmlspecialchars(number_format((float) $bill['value'], 2, ',', '.')) ?></td>
                                 <td><?= htmlspecialchars($bill['date'] ? format($bill['date'], 'd/m/y') : '-') ?></td>
+                                <td>
+                                    <button
+                                        class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center"
+                                        type="button"
+                                        data-action="delete-bill"
+                                        data-bill-id="<?= (int) $bill['id'] ?>"
+                                        aria-label="Delete bill <?= (int) $bill['id'] ?>"
+                                        title="Delete bill"
+                                    >
+                                        <?= icon('bin.svg', 'danger', '14', '14') ?>
+                                    </button>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -314,7 +334,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
 
             <div class="d-flex flex-column flex-md-row align-items-center justify-content-between px-2 py-3 gap-2">
                 <div class="small text-muted">
-                    Pagina <?= $pagination['current_page'] ?> di <?= $results->pages ?>, totale righe <?= $results->total ?>
+                    Page <?= $pagination['current_page'] ?> of <?= $results->pages ?>, total rows <?= $results->total ?>
                 </div>
 
                 <nav aria-label="Table pagination">
@@ -326,7 +346,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                                 data-page-number="1"
                                 <?= $pagination['has_previous'] ? '' : 'disabled' ?>
                             >
-                                Prima
+                                First
                             </button>
                         </li>
 
@@ -337,7 +357,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                                 data-page-number="<?= $pagination['previous_page'] ?>"
                                 <?= $pagination['has_previous'] ? '' : 'disabled' ?>
                             >
-                                Prec
+                                Prev
                             </button>
                         </li>
 
@@ -372,7 +392,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                                 data-page-number="<?= $pagination['next_page'] ?>"
                                 <?= $pagination['has_next'] ? '' : 'disabled' ?>
                             >
-                                Succ
+                                Next
                             </button>
                         </li>
 
@@ -383,7 +403,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                                 data-page-number="<?= $results->pages ?>"
                                 <?= $pagination['has_next'] ? '' : 'disabled' ?>
                             >
-                                Ultima
+                                Last
                             </button>
                         </li>
                     </ul>
@@ -395,7 +415,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
     <div class="floating-menu text-center pb-5">
         <div class="content p-0 h-100">
             <div class="pt-3 p-2">
-                <h6>FILTRA</h6>
+                <h6>FILTER</h6>
             </div>
 
             <div class="accordion p-1<?= $group_filter_active ? ' filter-accordion-active' : '' ?>" id="filter_group">
@@ -455,7 +475,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_filter_data" aria-expanded="false" aria-controls="collapse_filter_data">
-                            Data
+                            Date
                         </button>
                     </h2>
                     <div id="collapse_filter_data" class="accordion-collapse collapse" data-bs-parent="#filter_data">
@@ -472,7 +492,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="data_all" value="1" <?= $filters['data']['all'] ? 'checked' : '' ?>>
                                     <label class="form-check-label" for="data_all">
-                                        Seleziona tutto
+                                        Select all
                                     </label>
                                 </div>
                             </div>
@@ -483,7 +503,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
         </div>
 
         <div class="sticky-bottom w-100">
-            <button class="btn btn-primary w-100" data-action="apply-filters">Filtra</button>
+            <button class="btn btn-primary w-100" data-action="apply-filters">Apply Filters</button>
         </div>
     </div>
 
@@ -497,14 +517,14 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="history_page_setup_modal_label">Impostazioni tabella</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                <h5 class="modal-title" id="history_page_setup_modal_label">Table settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label" for="rows_per_page">Righe per pagina</label>
+                        <label class="form-label" for="rows_per_page">Rows per page</label>
                         <input
                             class="form-control"
                             id="rows_per_page"
@@ -517,7 +537,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" for="table_font_size">Dimensione testo tabella (px)</label>
+                        <label class="form-label" for="table_font_size">Table text size (px)</label>
                         <input
                             class="form-control"
                             id="table_font_size"
@@ -532,8 +552,8 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button type="button" class="btn btn-primary" data-action="save-setup">Salva</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" data-action="save-setup">Save</button>
             </div>
         </div>
     </div>
@@ -543,16 +563,16 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="history_add_bill_modal_label">Nuovo bill</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                <h5 class="modal-title" id="history_add_bill_modal_label" data-bill-modal-title>New bill</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label" for="history_bill_group_id">Gruppo</label>
+                        <label class="form-label" for="history_bill_group_id">Group</label>
                         <div class="d-flex gap-2 align-items-start">
-                            <select class="form-select" id="history_bill_group_id" data-history-group-select>
+                            <select class="form-select" id="history_bill_group_id" data-history-group-select data-default-value="<?= (int) $bill_form_defaults['group_id'] ?>">
                                 <?php foreach ($group_options as $group_option): ?>
 
                                     <option
@@ -569,31 +589,31 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                                 type="button"
                                 data-action="open-group-manager"
                             >
-                                Gestisci gruppi
+                                Manage groups
                             </button>
                         </div>
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" for="history_bill_name">Nome</label>
+                        <label class="form-label" for="history_bill_name">Name</label>
                         <input class="form-control" id="history_bill_name" type="text" maxlength="255" placeholder="Bill name">
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label" for="history_bill_value">Valore</label>
+                        <label class="form-label" for="history_bill_value">Value</label>
                         <input class="form-control" id="history_bill_value" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label" for="history_bill_date">Data</label>
-                        <input class="form-control" id="history_bill_date" type="date" value="<?= htmlspecialchars($bill_form_defaults['date']) ?>">
+                        <label class="form-label" for="history_bill_date">Date</label>
+                        <input class="form-control" id="history_bill_date" type="date" value="<?= htmlspecialchars($bill_form_defaults['date']) ?>" data-default-value="<?= htmlspecialchars($bill_form_defaults['date']) ?>">
                     </div>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Chiudi</button>
-                <button type="button" class="btn btn-primary" data-action="save-bill">Salva bill</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-action="save-bill" data-bill-modal-submit>Save bill</button>
             </div>
         </div>
     </div>
@@ -603,17 +623,17 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="history_group_manage_modal_label">Gestione gruppi</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                <h5 class="modal-title" id="history_group_manage_modal_label">Group management</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label" for="history_new_group_name">Nuovo gruppo</label>
+                        <label class="form-label" for="history_new_group_name">New group</label>
                         <div class="d-flex gap-2">
-                            <input class="form-control" id="history_new_group_name" type="text" maxlength="120" placeholder="Nome gruppo">
-                            <button type="button" class="btn btn-primary flex-shrink-0" data-action="create-group">Crea</button>
+                            <input class="form-control" id="history_new_group_name" type="text" maxlength="120" placeholder="Group name">
+                            <button type="button" class="btn btn-primary flex-shrink-0" data-action="create-group">Create</button>
                         </div>
                     </div>
 
@@ -622,7 +642,7 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" for="history_manage_group_id">Modifica gruppo</label>
+                        <label class="form-label" for="history_manage_group_id">Edit group</label>
                         <select class="form-select" id="history_manage_group_id" data-history-group-select>
                             <?php foreach ($group_options as $group_option): ?>
 
@@ -632,10 +652,16 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" for="history_manage_group_name">Nuovo nome</label>
+                        <label class="form-label" for="history_manage_group_name">New name</label>
                         <div class="d-flex gap-2">
-                            <input class="form-control" id="history_manage_group_name" type="text" maxlength="120" placeholder="Nuovo nome gruppo">
-                            <button type="button" class="btn btn-outline-primary flex-shrink-0" data-action="rename-group">Salva modifica</button>
+                            <input class="form-control" id="history_manage_group_name" type="text" maxlength="120" placeholder="New group name">
+                            <button type="button" class="btn btn-outline-primary flex-shrink-0" data-action="rename-group">Save changes</button>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-outline-danger" data-action="delete-group">Delete group</button>
                         </div>
                     </div>
                 </div>
@@ -648,11 +674,11 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="history_export_setup_modal_label">Configura export</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                <h5 class="modal-title" id="history_export_setup_modal_label">Configure export</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <label class="form-label" for="history_export_type">Tipo export</label>
+                <label class="form-label" for="history_export_type">Export type</label>
                 <select class="form-select" id="history_export_type" name="export_type">
                     <?php foreach ($page_state['export_types'] as $export_type_value => $export_type_label): ?>
 
@@ -661,8 +687,8 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                 </select>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button type="button" class="btn btn-primary" data-action="confirm-export-setup">Continua</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" data-action="confirm-export-setup">Continue</button>
             </div>
         </div>
     </div>
@@ -672,17 +698,17 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="history_grid_import_modal_label">Importa file XLSX</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                <h5 class="modal-title" id="history_grid_import_modal_label">Import XLSX file</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <label class="form-label" for="grid_import_file">Righe da esportare</label>
+                <label class="form-label" for="grid_import_file">Rows to export</label>
                 <input class="form-control" id="grid_import_file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-                <div class="form-text">Struttura mantenuta dal modulo sorgente. Questa pagina usa gli scope selezionati e filtro.</div>
+                <div class="form-text">The source module structure is preserved. This page uses the selected and filtered scopes.</div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button type="button" class="btn btn-primary" data-action="confirm-grid-export">Continua</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" data-action="confirm-grid-export">Continue</button>
             </div>
         </div>
     </div>
@@ -692,18 +718,18 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="history_action_progress_modal_label">Progressione azione</h5>
+                <h5 class="modal-title" id="history_action_progress_modal_label">Action progress</h5>
             </div>
             <div class="modal-body">
-                <div class="mb-2 fw-semibold" data-progress-title>Preparazione export</div>
+                <div class="mb-2 fw-semibold" data-progress-title>Preparing export</div>
                 <div class="progress" role="progressbar" aria-label="Export progress" aria-valuemin="0" aria-valuemax="100">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" data-progress-bar style="width: 0%">0%</div>
                 </div>
                 <div class="small text-danger mt-3 d-none" data-progress-error></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary d-none" data-action="close-progress">Chiudi</button>
-                <a class="btn btn-primary d-none" href="#" data-action="download-export">Scarica file</a>
+                <button type="button" class="btn btn-outline-secondary d-none" data-action="close-progress">Close</button>
+                <a class="btn btn-primary d-none" href="#" data-action="download-export">Download file</a>
             </div>
         </div>
     </div>

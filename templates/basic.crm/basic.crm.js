@@ -251,7 +251,7 @@ window.crmApp = {
 
     setLoading: function () {
 
-        this.appContainer.innerHTML = '<div class="card card-body mt-3 text-center"><h5>Caricamento...</h5></div>';
+        this.appContainer.innerHTML = '<div class="card card-body mt-3 text-center"><h5>Loading...</h5></div>';
     },
 
     setActiveMenu: function (pageId) {
@@ -268,7 +268,7 @@ window.crmApp = {
 
         if (!page) {
 
-            this.showFail('Pagina non disponibile');
+            this.showFail('Page not available');
             return;
         }
 
@@ -301,7 +301,7 @@ window.crmApp = {
                     })
                     .fail(() => {
 
-                        this.showFail('Impossibile caricare le risorse della pagina');
+                        this.showFail('Unable to load page assets');
                     });
             })
             .fail((jqXHR) => {
@@ -312,7 +312,7 @@ window.crmApp = {
                     return;
                 }
 
-                this.showFail('Impossibile caricare la pagina');
+                this.showFail('Unable to load page');
             });
     },
 
@@ -425,7 +425,7 @@ window.crmApp = {
             })
             .fail(() => {
 
-                this.showFail('Logout non riuscito');
+                this.showFail('Logout failed');
             });
     },
 
@@ -458,19 +458,19 @@ window.crmApp = {
 
             if (!response || response.ok !== true) {
 
-                this.showFail(response && response.error ? response.error : 'Cambio tema non riuscito');
+                this.showFail(response && response.error ? response.error : 'Theme change failed');
                 return;
             }
 
             this.applyTheme(response.theme || theme);
             this.hidePreferencesModal();
-            this.showSuccess('Tema aggiornato');
+            this.showSuccess('Theme updated');
         })
         .fail((jqXHR) => {
 
             const error = jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.error
                 ? jqXHR.responseJSON.error
-                : 'Cambio tema non riuscito';
+                : 'Theme change failed';
 
             this.showFail(error);
         });

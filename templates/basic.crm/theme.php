@@ -19,7 +19,7 @@ $theme = trim(post_string('theme'));
 if (!in_array($theme, ['light', 'dark'], true)) {
 
     http_response_code(422);
-    echo json_encode(['ok' => false, 'error' => 'Tema non valido.']);
+    echo json_encode(['ok' => false, 'error' => 'Invalid theme.']);
     exit;
 }
 

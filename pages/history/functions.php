@@ -203,8 +203,8 @@ function bills_export_scopes(): array
 {
 
     return [
-        'selected' => 'Selezionati',
-        'filter' => 'Con Filtro Applicato',
+        'selected' => 'Selected',
+        'filter' => 'With Applied Filter',
     ];
 
 }
@@ -284,6 +284,42 @@ function bills_create_export_payload_from_request(array $input, array $files = [
     return [
         'scope' => $scope,
         'export_type' => $export_type,
+        'filters' => $filters,
+        'selected_ids' => $selected_ids,
+    ];
+
+}
+
+function bills_create_bulk_action_payload_from_request(array $input): array
+{
+
+    $scope = trim(array_string($input, 'scope'));
+    $available_scopes = array_keys(bills_export_scopes());
+
+    if (!in_array($scope, $available_scopes, true)) {
+
+        throw new InvalidArgumentException('Unsupported action scope.');
+    }
+
+    $filters_payload = json_decode(array_string($input, 'filters', '{}'), true);
+    $today = date('Y-m-d');
+    $filters = $scope === 'filter'
+        ? bills_normalize_filters(is_array($filters_payload) ? $filters_payload : [], $today)
+        : bills_blank_filters($today);
+
+    $selected_ids_payload = json_decode(array_string($input, 'selected_ids', '[]'), true);
+    $selected_ids = array_values(array_filter(array_map(
+        'intval',
+        is_array($selected_ids_payload) ? $selected_ids_payload : []
+    ), static fn (int $id): bool => $id > 0));
+
+    if ($scope === 'selected' && $selected_ids === []) {
+
+        throw new InvalidArgumentException('Select at least one row first.');
+    }
+
+    return [
+        'scope' => $scope,
         'filters' => $filters,
         'selected_ids' => $selected_ids,
     ];

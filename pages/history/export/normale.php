@@ -27,7 +27,7 @@ return [
 
         if ($total_rows === 0) {
 
-            $progress_bar_1->warning('Nessuna riga trovata per i filtri selezionati.');
+            $progress_bar_1->warning('No rows found for the selected filters.');
         }
 
         SimpleXlsx()->start_writer($sheet_temp_path);
