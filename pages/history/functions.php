@@ -21,10 +21,100 @@ function bills_blank_filters(?string $today = null): array
 
 }
 
+function bills_reference_income_day(): ?int
+{
+
+    $rows = SQL()->select("
+        SELECT day
+        FROM incoming
+        ORDER BY id ASC
+        LIMIT 1
+    ");
+
+    $day = filter_var($rows[0]['day'] ?? null, FILTER_VALIDATE_INT);
+
+    if ($day === false || $day === null || $day < 1 || $day > 31) {
+
+        return null;
+    }
+
+    return (int) $day;
+
+}
+
+function bills_reference_day_in_month(int $year, int $month, int $day): DateTimeImmutable
+{
+
+    $last_day = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+    $normalized_day = min($day, $last_day);
+
+    return new DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $normalized_day));
+
+}
+
+function bills_reference_period(?string $today = null): ?array
+{
+
+    $income_day = bills_reference_income_day();
+
+    if ($income_day === null) {
+
+        return null;
+    }
+
+    $today_date = $today !== null && $today !== ''
+        ? new DateTimeImmutable($today)
+        : new DateTimeImmutable('today');
+
+    $current_anchor = bills_reference_day_in_month(
+        (int) $today_date->format('Y'),
+        (int) $today_date->format('n'),
+        $income_day
+    );
+
+    if ($today_date < $current_anchor) {
+
+        $previous_month = $today_date->modify('first day of previous month');
+        $start = bills_reference_day_in_month(
+            (int) $previous_month->format('Y'),
+            (int) $previous_month->format('n'),
+            $income_day
+        );
+    } else {
+
+        $start = $current_anchor;
+    }
+
+    $next_month = $start->modify('first day of next month');
+    $end = bills_reference_day_in_month(
+        (int) $next_month->format('Y'),
+        (int) $next_month->format('n'),
+        $income_day
+    );
+
+    return [
+        'da' => $start->format('Y-m-d'),
+        'a' => $end->format('Y-m-d'),
+    ];
+
+}
+
 function bills_default_filters(?string $today = null): array
 {
 
-    return bills_blank_filters($today);
+    $filters = bills_blank_filters($today);
+    $reference_period = bills_reference_period($today);
+
+    if ($reference_period === null) {
+
+        return $filters;
+    }
+
+    $filters['data']['all'] = false;
+    $filters['data']['da'] = $reference_period['da'];
+    $filters['data']['a'] = $reference_period['a'];
+
+    return $filters;
 
 }
 
@@ -101,7 +191,7 @@ function bills_build_where(array $filters, array $options = []): string
 function bills_create_select(string $select = '*'): Select
 {
 
-    return Select($select)->from('view_bills')->orderby('id desc');
+    return Select($select)->from('view_bills')->orderby('date desc, id desc');
 
 }
 

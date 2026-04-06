@@ -78,7 +78,7 @@ $offset = ($current_page - 1) * $per_page;
 
 $query = bills_create_select('*')
     ->where(bills_build_where($filters))
-    ->orderby('id desc')
+    ->orderby('date desc, id desc')
     ->limit($per_page)
     ->offset($offset);
 
@@ -91,7 +91,7 @@ if ($results->pages > 0 && $offset >= $results->total) {
     $offset = ($current_page - 1) * $per_page;
     $results = bills_create_select('*')
         ->where(bills_build_where($filters))
-        ->orderby('id desc')
+        ->orderby('date desc, id desc')
         ->limit($per_page)
         ->offset($offset)
         ->get_table();
