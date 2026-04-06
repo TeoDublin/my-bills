@@ -1,0 +1,144 @@
+.crm-multi-select-native {
+
+    display: none !important;
+}
+
+.crm-multi-picker {
+
+    position: relative;
+    width: 100%;
+}
+
+.crm-multi-picker-toggle {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 3.25rem;
+    padding: 0.75rem 0.95rem;
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+    border-radius: 0.5rem;
+    background: rgba(var(--bs-primary-rgb), 0.02);
+    text-align: left;
+    color: var(--bs-body-color);
+}
+
+.crm-multi-picker.open .crm-multi-picker-toggle,
+.crm-multi-picker-toggle:hover,
+.crm-multi-picker-toggle:focus {
+
+    border-color: rgba(var(--bs-primary-rgb), 0.38);
+}
+
+.crm-multi-picker-summary {
+
+    display: block;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.crm-multi-picker-caret {
+
+    flex: 0 0 auto;
+    margin-left: 0.75rem;
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.crm-multi-picker-panel {
+
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: none;
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.14);
+    border-radius: 0.5rem;
+    background: var(--bs-body-bg);
+    overflow: hidden;
+}
+
+.crm-multi-picker.open .crm-multi-picker-panel {
+
+    display: block;
+}
+
+.crm-multi-picker-search-wrap {
+
+    padding: 0.85rem;
+    background: linear-gradient(180deg, rgba(var(--bs-primary-rgb), 0.05), rgba(var(--bs-primary-rgb), 0.01));
+}
+
+.crm-multi-picker-search {
+
+    width: 100%;
+    min-height: 2.9rem;
+    padding: 0.65rem 0.85rem;
+    border: 0.5px solid rgba(var(--bs-primary-rgb), 0.18);
+    border-radius: 0.5rem;
+    background: var(--bs-body-bg);
+}
+
+.crm-multi-picker-search:focus,
+.crm-multi-picker-search:focus-visible {
+
+    outline: none !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.18) !important;
+}
+
+.crm-multi-picker-actions {
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0 0.85rem 0.75rem;
+}
+
+.crm-multi-picker-action {
+
+    min-height: 2.4rem;
+    border: 0.5px solid rgba(var(--bs-primary-rgb), 0.16);
+    border-radius: 0.5rem;
+    background: var(--bs-tertiary-bg);
+    font-weight: 400;
+    font-size: 0.9rem;
+}
+
+.crm-multi-picker-options {
+
+    max-height: 18rem;
+    padding: 0.35rem 0.5rem 0.5rem;
+    overflow: auto;
+}
+
+.crm-multi-picker-option {
+
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 2.7rem;
+    margin: 0.15rem 0;
+    padding: 0.65rem 0.8rem;
+    border-radius: 0.8rem;
+    cursor: pointer;
+}
+
+.crm-multi-picker-option:hover,
+.crm-multi-picker-option.selected {
+
+    background: rgba(var(--bs-primary-rgb), 0.12);
+}
+
+.crm-multi-picker-option input {
+
+    flex: 0 0 auto;
+}
+
+.crm-multi-picker-option-text {
+
+    line-height: 1.35;
+}
+

@@ -1,0 +1,30 @@
+.crm-icon {
+
+    display: inline-block;
+    vertical-align: middle;
+}
+
+[data-bs-theme="dark"] svg.primary{
+    fill: white!important;
+}
+
+[data-bs-theme="dark"] svg.success{
+    fill: green!important;
+}
+
+[data-bs-theme="dark"] svg.fail{
+    fill: red!important;
+}
+
+
+[data-bs-theme="light"] svg.primary{
+    fill: black!important;
+}
+
+[data-bs-theme="light"] svg.success{
+    fill: green!important;
+}
+
+[data-bs-theme="light"] svg.fail{
+    fill: red!important;
+}
