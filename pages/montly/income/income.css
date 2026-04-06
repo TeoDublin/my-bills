@@ -1,0 +1,29 @@
+.page-income {
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.income-form-card {
+
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.12);
+    border-radius: 1.25rem;
+    background:
+        linear-gradient(180deg, rgba(var(--bs-primary-rgb), 0.06), rgba(var(--bs-primary-rgb), 0.015)),
+        var(--bs-body-bg);
+    box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.06);
+    padding: 1.5rem;
+}
+
+.income-form-fields {
+
+    display: grid;
+    gap: 1rem;
+}
+
+.income-submit {
+
+    justify-self: start;
+    padding-inline: 1.5rem;
+}

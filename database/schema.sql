@@ -10,6 +10,7 @@ SOURCE /var/www/html/my-bills/database/tables/password_reset_tokens.sql;
 SOURCE /var/www/html/my-bills/database/tables/async_jobs.sql;
 SOURCE /var/www/html/my-bills/database/tables/bills_groups.sql;
 SOURCE /var/www/html/my-bills/database/tables/montly_bills.sql;
+SOURCE /var/www/html/my-bills/database/tables/incoming.sql;
 SOURCE /var/www/html/my-bills/database/tables/bills.sql;
 SOURCE /var/www/html/my-bills/database/views/view_montly_bills.sql;
 SOURCE /var/www/html/my-bills/database/views/view_bills.sql;
