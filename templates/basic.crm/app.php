@@ -8,6 +8,14 @@ function app_pages(): array
 {
 
     return [
+        'montly' => [
+            'id' => 'montly',
+            'label' => 'Monthly',
+            'icon' => 'calendar-plus.svg',
+            'endpoint' => url('pages/montly/montly.php'),
+            'script' => asset('pages/montly/montly.js'),
+            'style' => asset('pages/montly/montly.css'),
+        ],
         'history' => [
             'id' => 'history',
             'label' => 'History',
