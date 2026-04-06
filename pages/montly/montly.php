@@ -132,6 +132,8 @@ $page_state = [
         'group_id' => (int) ($group_options[0]['id'] ?? 0),
         'value' => '',
         'day' => '',
+        'first_date' => '',
+        'last_date' => '',
     ],
     'results' => $results,
     'pagination' => [
@@ -289,10 +291,12 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                         <tr style="font-size:<?= $table_font_size ?>px;line-height:<?= $header_line_height ?>px;">
                             <th><input type="checkbox" data-table-select-all></th>
                             <th class="w-10">id</th>
-                            <th class="w-25">group</th>
-                            <th class="w-25">name</th>
-                            <th class="w-15">value</th>
-                            <th class="w-15">day</th>
+                            <th class="w-15">group</th>
+                            <th class="w-20">name</th>
+                            <th class="w-10">value</th>
+                            <th class="w-10">day</th>
+                            <th class="w-15">first date</th>
+                            <th class="w-15">last date</th>
                             <th class="w-10"><?= icon('bin.svg', 'primary', $header_line_height, $header_line_height); ?></th>
                         </tr>
                     </thead>
@@ -305,6 +309,8 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                                 data-name="<?= htmlspecialchars(string_value($row['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
                                 data-value="<?= htmlspecialchars(number_format((float) $row['value'], 2, '.', ''), ENT_QUOTES, 'UTF-8') ?>"
                                 data-day="<?= (int) $row['day'] ?>"
+                                data-first-date="<?= htmlspecialchars(string_value($row['first_date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                data-last-date="<?= htmlspecialchars(string_value($row['last_date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
                                 style="font-size:<?= $table_font_size ?>px;line-height:<?= $line_height ?>px;word-break:break-word;cursor:pointer;"
                             >
                                 <td data-table-row-select-cell><input type="checkbox" data-table-row-select></td>
@@ -313,6 +319,8 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                                 <td><?= htmlspecialchars(string_value($row['name'] ?? '')) ?></td>
                                 <td><?= htmlspecialchars(number_format((float) $row['value'], 2, ',', '.')) ?></td>
                                 <td><?= (int) $row['day'] ?></td>
+                                <td><?= htmlspecialchars(!empty($row['first_date']) ? format($row['first_date'], 'd/m/y') : '-') ?></td>
+                                <td><?= htmlspecialchars(!empty($row['last_date']) ? format($row['last_date'], 'd/m/y') : '-') ?></td>
                                 <td>
                                     <button
                                         class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center"
@@ -531,6 +539,14 @@ $page_numbers = $results->pages > 1 ? range($pagination['window_start'], $pagina
                     <div class="col-12">
                         <label class="form-label" for="montly_bill_day">Day of month</label>
                         <input class="form-control" id="montly_bill_day" type="number" min="1" max="31" step="1" value="<?= htmlspecialchars($montly_form_defaults['day']) ?>" data-default-value="<?= htmlspecialchars($montly_form_defaults['day']) ?>" placeholder="1-31">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="montly_bill_first_date">First date</label>
+                        <input class="form-control" id="montly_bill_first_date" type="date" value="<?= htmlspecialchars($montly_form_defaults['first_date']) ?>" data-default-value="<?= htmlspecialchars($montly_form_defaults['first_date']) ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="montly_bill_last_date">Last date</label>
+                        <input class="form-control" id="montly_bill_last_date" type="date" value="<?= htmlspecialchars($montly_form_defaults['last_date']) ?>" data-default-value="<?= htmlspecialchars($montly_form_defaults['last_date']) ?>">
                     </div>
                 </div>
             </div>

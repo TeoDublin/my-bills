@@ -5,6 +5,8 @@ SELECT
     mb.name,
     mb.value,
     mb.day,
+    mb.first_date,
+    mb.last_date,
     bg.name AS group_name
 FROM montly_bills mb
 LEFT JOIN bills_groups bg ON bg.id = mb.id_group;

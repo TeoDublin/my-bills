@@ -33,6 +33,8 @@ try {
         $name = trim(post_string('name'));
         $value_raw = str_replace(',', '.', trim(post_string('value')));
         $day = filter_input(INPUT_POST, 'day', FILTER_VALIDATE_INT);
+        $first_date = trim(post_string('first_date'));
+        $last_date = trim(post_string('last_date'));
 
         if ($group_id === false || $group_id === null || $group_id <= 0) {
 
@@ -60,6 +62,16 @@ try {
             throw new InvalidArgumentException('Day must be between 1 and 31.');
         }
 
+        if ($first_date !== '' && !montly_is_valid_date($first_date)) {
+
+            throw new InvalidArgumentException('Enter a valid first date.');
+        }
+
+        if ($last_date !== '' && !montly_is_valid_date($last_date)) {
+
+            throw new InvalidArgumentException('Enter a valid last date.');
+        }
+
         $group_exists = SQL()->select("
             SELECT id
             FROM bills_groups
@@ -77,6 +89,8 @@ try {
             'name' => $name,
             'value' => number_format($value, 2, '.', ''),
             'day' => (int) $day,
+            'first_date' => $first_date !== '' ? $first_date : null,
+            'last_date' => $last_date !== '' ? $last_date : null,
         ])->into('montly_bills')->get();
 
         echo json_encode([
@@ -95,6 +109,8 @@ try {
         $name = trim(post_string('name'));
         $value_raw = str_replace(',', '.', trim(post_string('value')));
         $day = filter_input(INPUT_POST, 'day', FILTER_VALIDATE_INT);
+        $first_date = trim(post_string('first_date'));
+        $last_date = trim(post_string('last_date'));
 
         if ($id === false || $id === null || $id <= 0) {
 
@@ -127,6 +143,16 @@ try {
             throw new InvalidArgumentException('Day must be between 1 and 31.');
         }
 
+        if ($first_date !== '' && !montly_is_valid_date($first_date)) {
+
+            throw new InvalidArgumentException('Enter a valid first date.');
+        }
+
+        if ($last_date !== '' && !montly_is_valid_date($last_date)) {
+
+            throw new InvalidArgumentException('Enter a valid last date.');
+        }
+
         $row_exists = SQL()->select("
             SELECT id
             FROM montly_bills
@@ -157,6 +183,8 @@ try {
                 'name' => $name,
                 'value' => number_format($value, 2, '.', ''),
                 'day' => (int) $day,
+                'first_date' => $first_date !== '' ? $first_date : null,
+                'last_date' => $last_date !== '' ? $last_date : null,
             ])
             ->where('id = ' . (int) $id);
 

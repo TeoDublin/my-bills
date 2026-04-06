@@ -121,6 +121,8 @@ window.PageModules['montly'] = (function () {
                     billNameInput: document.getElementById('montly_bill_name'),
                     billValueInput: document.getElementById('montly_bill_value'),
                     billDayInput: document.getElementById('montly_bill_day'),
+                    billFirstDateInput: document.getElementById('montly_bill_first_date'),
+                    billLastDateInput: document.getElementById('montly_bill_last_date'),
                     billModalTitle: document.querySelector('[data-montly-modal-title]'),
                     billModalSubmit: document.querySelector('[data-montly-modal-submit]'),
                     newGroupNameInput: document.getElementById('montly_new_group_name'),
@@ -474,7 +476,9 @@ window.PageModules['montly'] = (function () {
                     group_id: payload.groupId,
                     name: payload.name,
                     value: payload.value,
-                    day: payload.day
+                    day: payload.day,
+                    first_date: payload.firstDate,
+                    last_date: payload.lastDate
                 }, (response) => {
 
                     this.applyGroupOptions(response.groups || [], payload.groupId);
@@ -491,6 +495,8 @@ window.PageModules['montly'] = (function () {
                 const name = this.dom.billNameInput ? this.dom.billNameInput.value.trim() : '';
                 const value = this.dom.billValueInput ? this.dom.billValueInput.value.trim() : '';
                 const day = this.dom.billDayInput ? this.dom.billDayInput.value.trim() : '';
+                const firstDate = this.dom.billFirstDateInput ? this.dom.billFirstDateInput.value : '';
+                const lastDate = this.dom.billLastDateInput ? this.dom.billLastDateInput.value : '';
 
                 if (groupId === '') {
 
@@ -518,11 +524,25 @@ window.PageModules['montly'] = (function () {
                     return null;
                 }
 
+                if (firstDate !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(firstDate)) {
+
+                    this.context.app.showFail('Enter a valid first date');
+                    return null;
+                }
+
+                if (lastDate !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(lastDate)) {
+
+                    this.context.app.showFail('Enter a valid last date');
+                    return null;
+                }
+
                 return {
                     groupId: groupId,
                     name: name,
                     value: value,
-                    day: String(dayNumber)
+                    day: String(dayNumber),
+                    firstDate: firstDate,
+                    lastDate: lastDate
                 };
             },
 
@@ -657,6 +677,16 @@ window.PageModules['montly'] = (function () {
                 if (this.dom.billDayInput) {
 
                     this.dom.billDayInput.value = row.dataset.day || '';
+                }
+
+                if (this.dom.billFirstDateInput) {
+
+                    this.dom.billFirstDateInput.value = row.dataset.firstDate || '';
+                }
+
+                if (this.dom.billLastDateInput) {
+
+                    this.dom.billLastDateInput.value = row.dataset.lastDate || '';
                 }
 
                 if (this.dom.billModalTitle) {
@@ -1093,6 +1123,16 @@ window.PageModules['montly'] = (function () {
                 if (this.dom.billDayInput) {
 
                     this.dom.billDayInput.value = this.dom.billDayInput.dataset.defaultValue || '';
+                }
+
+                if (this.dom.billFirstDateInput) {
+
+                    this.dom.billFirstDateInput.value = this.dom.billFirstDateInput.dataset.defaultValue || '';
+                }
+
+                if (this.dom.billLastDateInput) {
+
+                    this.dom.billLastDateInput.value = this.dom.billLastDateInput.dataset.defaultValue || '';
                 }
 
                 if (this.dom.billGroupSelect) {

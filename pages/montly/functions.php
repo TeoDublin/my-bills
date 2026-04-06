@@ -256,6 +256,13 @@ function montly_day_is_valid($value): bool
 
 }
 
+function montly_is_valid_date($value): bool
+{
+
+    return is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1;
+
+}
+
 function montly_is_clear_marker($value): bool
 {
 

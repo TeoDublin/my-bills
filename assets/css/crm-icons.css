@@ -5,7 +5,15 @@
 }
 
 [data-bs-theme="dark"] svg.primary{
-    fill: white!important;
+    fill: rgba(255, 255, 255, 0.514)!important;
+}
+
+[data-bs-theme="dark"] div.menu-active{
+    background-color: rgba(255, 255, 255, 0.514)!important;
+}
+
+[data-bs-theme="dark"] div.menu-active svg.primary{
+    fill: black!important;
 }
 
 [data-bs-theme="dark"] svg.success{
@@ -19,6 +27,14 @@
 
 [data-bs-theme="light"] svg.primary{
     fill: black!important;
+}
+
+[data-bs-theme="light"] div.menu-active svg.primary{
+    fill: blue!important;
+}
+
+[data-bs-theme="light"] div.menu-active{
+    background-color: rgb(var(--bs-primary-rgb),0.2)!important;
 }
 
 [data-bs-theme="light"] svg.success{

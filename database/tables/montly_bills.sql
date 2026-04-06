@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS `montly_bills` (
     `name` varchar(255) NOT NULL,
     `value` decimal(12,2) NOT NULL DEFAULT 0.00,
     `day` tinyint(2) unsigned NOT NULL,
+    `first_date` date DEFAULT NULL,
+    `last_date` date DEFAULT NULL,
     PRIMARY KEY (`id`),
     KEY `idx_montly_bills_id_group` (`id_group`),
     KEY `idx_montly_bills_day` (`day`),

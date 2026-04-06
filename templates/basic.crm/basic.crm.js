@@ -155,9 +155,20 @@ window.crmApp = {
 
                 if (pageId) {
 
+                    this.setMenuOptionState(option);
                     this.loadPage(pageId);
                 }
             });
+        });
+    },
+
+    setMenuOptionState: function (activeOption) {
+
+        this.options.forEach((option) => {
+
+            const isActive = option === activeOption;
+            option.classList.toggle('active', isActive);
+            option.classList.toggle('menu-active', isActive);
         });
     },
 
@@ -258,7 +269,9 @@ window.crmApp = {
 
         this.options.forEach((option) => {
 
-            option.classList.toggle('menu-active', option.dataset.menu === pageId);
+            const isActive = option.dataset.menu === pageId;
+            option.classList.toggle('active', isActive);
+            option.classList.toggle('menu-active', isActive);
         });
     },
 
