@@ -98,13 +98,17 @@ $weekly_name_breakdown = history_dashboard_weekly_name_breakdown($view_filters);
                 <span>Outcomes</span>
                 <strong><?= htmlspecialchars(number_format($cards['outcomes'], 2, ',', '.')) ?></strong>
             </button>
+            <button class="history-dashboard-card history-dashboard-card-button<?= $view_mode === 'current_outcomes' ? ' is-active' : '' ?>" type="button" data-action="set-view" data-view="current_outcomes">
+                <span>Current outcomes</span>
+                <strong><?= htmlspecialchars(number_format($cards['current_outcomes'], 2, ',', '.')) ?></strong>
+            </button>
             <button class="history-dashboard-card history-dashboard-card-button<?= $view_mode === 'next_outcomes' ? ' is-active' : '' ?>" type="button" data-action="set-view" data-view="next_outcomes">
                 <span>Next outcomes</span>
                 <strong><?= htmlspecialchars(number_format($cards['next_outcomes'], 2, ',', '.')) ?></strong>
             </button>
             <div class="history-dashboard-card">
-                <span>Currently</span>
-                <strong><?= htmlspecialchars(number_format($cards['currently'], 2, ',', '.')) ?></strong>
+                <span>Current balance</span>
+                <strong><?= htmlspecialchars(number_format($cards['current_balance'], 2, ',', '.')) ?></strong>
             </div>
             <div class="history-dashboard-card">
                 <span>Projected balance</span>

@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verify_csrf($_POST['csrf_token'] ?
 }
 
 Auth()->require_auth();
+$user_id = auth_user_id_or_fail();
 
 $action = trim(post_string('action'));
 
@@ -49,6 +50,7 @@ try {
     $existing_rows = SQL()->select("
         SELECT id
         FROM incoming
+        WHERE user_id = " . $user_id . "
         ORDER BY id ASC
     ");
 
@@ -74,7 +76,8 @@ try {
 
                 SQL()->query("
                     DELETE FROM incoming
-                    WHERE id IN(" . implode(',', $extra_ids) . ")
+                    WHERE user_id = " . $user_id . "
+                      AND id IN(" . implode(',', $extra_ids) . ")
                 ");
             }
         }
@@ -83,6 +86,7 @@ try {
     } else {
 
         $income_id = Insert([
+            'user_id' => $user_id,
             'value' => number_format($value, 2, '.', ''),
             'day' => (int) $day,
         ])->into('incoming')->get();

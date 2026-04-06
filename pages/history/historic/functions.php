@@ -24,9 +24,17 @@ function bills_blank_filters(?string $today = null): array
 function bills_reference_income_day(): ?int
 {
 
+    $user_id = auth_user_id();
+
+    if ($user_id <= 0) {
+
+        return null;
+    }
+
     $rows = SQL()->select("
         SELECT day
         FROM incoming
+        WHERE user_id = " . $user_id . "
         ORDER BY id ASC
         LIMIT 1
     ");
@@ -153,7 +161,8 @@ function bills_normalize_filters(array $source, ?string $today = null): array
 function bills_build_where(array $filters, array $options = []): string
 {
 
-    $where_parts = ['1=1'];
+    $user_id = (int) ($options['user_id'] ?? auth_user_id_or_fail());
+    $where_parts = ['1=1', 'user_id = ' . $user_id];
 
     if (!($filters['data']['all'] ?? false)) {
 
@@ -198,8 +207,11 @@ function bills_create_select(string $select = '*'): Select
 function bills_group_options(): array
 {
 
+    $user_id = auth_user_id_or_fail();
+
     return Select('*')
         ->from('bills_groups')
+        ->where('user_id = ' . $user_id)
         ->orderby('name asc')
         ->get();
 

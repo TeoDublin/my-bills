@@ -4,6 +4,7 @@
     flex-direction: column;
     gap: 1rem;
     min-height: 0;
+    overflow: hidden;
 }
 
 .history-dashboard-grid {
@@ -11,13 +12,14 @@
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     gap: 1rem;
+    min-height: 0;
 }
 
 .history-dashboard-cards {
 
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 1rem;
 }
 
@@ -70,12 +72,17 @@
 
     padding: 0.75rem;
     grid-column: span 6;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: calc(100dvh - 22rem);
 }
 
 .history-dashboard-chart {
 
     width: 100%;
-    min-height: 23rem;
+    min-height: 0;
+    height: 100%;
 }
 
 @media (max-width: 992px) {
@@ -89,5 +96,11 @@
     .history-dashboard-chart-card {
 
         grid-column: 1 / -1;
+        height: auto;
+    }
+
+    .history-dashboard-chart {
+
+        min-height: 23rem;
     }
 }

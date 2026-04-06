@@ -2,12 +2,12 @@
 
 require_once __DIR__ . '/montly_sync.php';
 
-if (PHP_SAPI !== 'cli') {
+// if (PHP_SAPI !== 'cli') {
 
-    http_response_code(403);
-    echo "CLI only.\n";
-    exit(1);
-}
+//     http_response_code(403);
+//     echo "CLI only.\n";
+//     exit(1);
+// }
 
 try {
 

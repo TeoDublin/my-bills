@@ -63,7 +63,8 @@ foreach ($group_options as $group_option) {
 $name_rows = SQL()->select("
     SELECT DISTINCT `name`
     FROM view_bills
-    WHERE `name` IS NOT NULL AND `name` <> ''
+    WHERE user_id = " . $user_id . "
+      AND `name` IS NOT NULL AND `name` <> ''
     ORDER BY `name` ASC
 ");
 $name_options = array_values(array_filter(array_map(

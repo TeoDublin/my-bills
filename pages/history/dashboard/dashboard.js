@@ -335,7 +335,9 @@ window.HistoryDashboardTabModule = (function () {
 
             setView: function (view) {
 
-                const nextView = view === 'next_outcomes' ? 'next_outcomes' : 'outcomes';
+                const nextView = ['outcomes', 'current_outcomes', 'next_outcomes'].includes(view)
+                    ? view
+                    : 'outcomes';
 
                 this.context.app.reloadCurrentPage({
                     ...(this.context.params || {}),
@@ -346,8 +348,10 @@ window.HistoryDashboardTabModule = (function () {
 
             currentViewMode: function () {
 
-                return this.readJsonScript('history_dashboard_view_mode_json', 'outcomes') === 'next_outcomes'
-                    ? 'next_outcomes'
+                const viewMode = this.readJsonScript('history_dashboard_view_mode_json', 'outcomes');
+
+                return ['outcomes', 'current_outcomes', 'next_outcomes'].includes(viewMode)
+                    ? viewMode
                     : 'outcomes';
             },
 
@@ -606,7 +610,7 @@ window.HistoryDashboardTabModule = (function () {
                         backgroundColor: 'transparent'
                     },
                     title: {
-                        text: 'Wickly outcomes',
+                        text: 'Outcomes',
                         style: {
                             color: chartStyles.textColor
                         }

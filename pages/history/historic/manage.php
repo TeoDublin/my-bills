@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verify_csrf($_POST['csrf_token'] ?
 }
 
 Auth()->require_auth();
+$user_id = auth_user_id_or_fail();
 
 $action = trim(post_string('action'));
 
@@ -64,6 +65,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE id = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -73,6 +75,7 @@ try {
         }
 
         $bill_id = Insert([
+            'user_id' => $user_id,
             'id_group' => (int) $group_id,
             'name' => $name,
             'value' => number_format($value, 2, '.', ''),
@@ -131,6 +134,7 @@ try {
             SELECT id
             FROM bills
             WHERE id = " . (int) $bill_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -143,6 +147,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE id = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -158,7 +163,7 @@ try {
                 'value' => number_format($value, 2, '.', ''),
                 'date' => $date,
             ])
-            ->where('id = ' . (int) $bill_id);
+            ->where('id = ' . (int) $bill_id . ' AND user_id = ' . $user_id);
 
         echo json_encode([
             'ok' => true,
@@ -182,6 +187,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE LOWER(name) = LOWER('" . SQL()->escape($name) . "')
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -191,6 +197,7 @@ try {
         }
 
         $group_id = Insert([
+            'user_id' => $user_id,
             'name' => $name,
         ])->into('bills_groups')->get();
 
@@ -222,6 +229,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE id = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -234,6 +242,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE LOWER(name) = LOWER('" . SQL()->escape($name) . "')
+              AND user_id = " . $user_id . "
               AND id <> " . (int) $group_id . "
             LIMIT 1
         ");
@@ -247,7 +256,7 @@ try {
             ->set([
                 'name' => $name,
             ])
-            ->where('id = ' . (int) $group_id);
+            ->where('id = ' . (int) $group_id . ' AND user_id = ' . $user_id);
 
         echo json_encode([
             'ok' => true,
@@ -271,6 +280,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE id = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -283,6 +293,7 @@ try {
             SELECT COUNT(*) AS total
             FROM bills
             WHERE id_group = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
         ");
 
         if ((int) ($related_bills[0]['total'] ?? 0) > 0) {
@@ -292,7 +303,7 @@ try {
 
         Delete()
             ->from('bills_groups')
-            ->where('id = ' . (int) $group_id);
+            ->where('id = ' . (int) $group_id . ' AND user_id = ' . $user_id);
 
         $groups = bills_group_options_payload();
 
@@ -318,6 +329,7 @@ try {
             SELECT id
             FROM bills
             WHERE id = " . (int) $bill_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -328,7 +340,7 @@ try {
 
         Delete()
             ->from('bills')
-            ->where('id = ' . (int) $bill_id);
+            ->where('id = ' . (int) $bill_id . ' AND user_id = ' . $user_id);
 
         echo json_encode([
             'ok' => true,
@@ -348,7 +360,10 @@ try {
         $count_rows = SQL()->select("
             SELECT COUNT(*) AS total
             FROM bills
-            WHERE " . $where . "
+            WHERE " . bills_build_where($payload['filters'], [
+                'selected_ids' => $payload['selected_ids'],
+                'user_id' => $user_id,
+            ]) . "
         ");
         $total = (int) ($count_rows[0]['total'] ?? 0);
 
@@ -359,7 +374,10 @@ try {
 
         SQL()->query("
             DELETE FROM bills
-            WHERE " . $where . "
+            WHERE " . bills_build_where($payload['filters'], [
+                'selected_ids' => $payload['selected_ids'],
+                'user_id' => $user_id,
+            ]) . "
         ");
 
         echo json_encode([

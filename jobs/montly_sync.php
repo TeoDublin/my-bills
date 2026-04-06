@@ -88,12 +88,13 @@ function montly_sync_is_within_bounds(DateTimeImmutable $scheduled_date, array $
 
 }
 
-function montly_sync_income_day(): int
+function montly_sync_income_day(int $user_id): int
 {
 
     $rows = SQL()->select("
         SELECT day
         FROM incoming
+        WHERE user_id = " . $user_id . "
         ORDER BY id ASC
         LIMIT 1
     ");
@@ -109,7 +110,7 @@ function montly_sync_income_day(): int
 
 }
 
-function montly_sync_generated_rows_for_bill_ids(array $montly_bill_ids): array
+function montly_sync_generated_rows_for_bill_ids(array $montly_bill_ids, int $user_id): array
 {
 
     $ids = array_values(array_filter(array_map('intval', $montly_bill_ids), static fn (int $id): bool => $id > 0));
@@ -120,15 +121,16 @@ function montly_sync_generated_rows_for_bill_ids(array $montly_bill_ids): array
     }
 
     return SQL()->select("
-        SELECT id, id_montly_bill, id_group, name, value, date, reference_start, reference_end
+        SELECT id, user_id, id_montly_bill, id_group, name, value, date, reference_start, reference_end
         FROM bills
-        WHERE id_montly_bill IN(" . implode(',', $ids) . ")
+        WHERE user_id = " . $user_id . "
+          AND id_montly_bill IN(" . implode(',', $ids) . ")
         ORDER BY id ASC
     ");
 
 }
 
-function montly_sync_delete_generated_rows_for_bill_ids(array $montly_bill_ids): int
+function montly_sync_delete_generated_rows_for_bill_ids(array $montly_bill_ids, int $user_id): int
 {
 
     $ids = array_values(array_filter(array_map('intval', $montly_bill_ids), static fn (int $id): bool => $id > 0));
@@ -141,7 +143,8 @@ function montly_sync_delete_generated_rows_for_bill_ids(array $montly_bill_ids):
     $rows = SQL()->select("
         SELECT COUNT(*) AS total
         FROM bills
-        WHERE id_montly_bill IN(" . implode(',', $ids) . ")
+        WHERE user_id = " . $user_id . "
+          AND id_montly_bill IN(" . implode(',', $ids) . ")
     ");
     $total = (int) ($rows[0]['total'] ?? 0);
 
@@ -149,7 +152,8 @@ function montly_sync_delete_generated_rows_for_bill_ids(array $montly_bill_ids):
 
         SQL()->query("
             DELETE FROM bills
-            WHERE id_montly_bill IN(" . implode(',', $ids) . ")
+            WHERE user_id = " . $user_id . "
+              AND id_montly_bill IN(" . implode(',', $ids) . ")
         ");
     }
 
@@ -157,13 +161,14 @@ function montly_sync_delete_generated_rows_for_bill_ids(array $montly_bill_ids):
 
 }
 
-function montly_sync_refresh_bill_history(int $montly_bill_id): array
+function montly_sync_refresh_bill_history(int $montly_bill_id, int $user_id): array
 {
 
     $montly_bill_rows = SQL()->select("
-        SELECT id, id_group, name, value, day, first_date, last_date
+        SELECT id, user_id, id_group, name, value, day, first_date, last_date
         FROM montly_bills
         WHERE id = " . $montly_bill_id . "
+          AND user_id = " . $user_id . "
         LIMIT 1
     ");
 
@@ -171,12 +176,12 @@ function montly_sync_refresh_bill_history(int $montly_bill_id): array
 
         return [
             'updated' => 0,
-            'deleted' => montly_sync_delete_generated_rows_for_bill_ids([$montly_bill_id]),
+            'deleted' => montly_sync_delete_generated_rows_for_bill_ids([$montly_bill_id], $user_id),
         ];
     }
 
     $montly_bill = $montly_bill_rows[0];
-    $generated_rows = montly_sync_generated_rows_for_bill_ids([$montly_bill_id]);
+    $generated_rows = montly_sync_generated_rows_for_bill_ids([$montly_bill_id], $user_id);
     $summary = [
         'updated' => 0,
         'deleted' => 0,
@@ -191,7 +196,7 @@ function montly_sync_refresh_bill_history(int $montly_bill_id): array
 
             Delete()
                 ->from('bills')
-                ->where('id = ' . (int) ($generated_row['id'] ?? 0));
+                ->where('id = ' . (int) ($generated_row['id'] ?? 0) . ' AND user_id = ' . $user_id);
 
             $summary['deleted']++;
             continue;
@@ -205,7 +210,7 @@ function montly_sync_refresh_bill_history(int $montly_bill_id): array
 
             Delete()
                 ->from('bills')
-                ->where('id = ' . (int) ($generated_row['id'] ?? 0));
+                ->where('id = ' . (int) ($generated_row['id'] ?? 0) . ' AND user_id = ' . $user_id);
 
             $summary['deleted']++;
             continue;
@@ -220,7 +225,7 @@ function montly_sync_refresh_bill_history(int $montly_bill_id): array
                 'reference_start' => $reference_start->format('Y-m-d'),
                 'reference_end' => $reference_end->format('Y-m-d'),
             ])
-            ->where('id = ' . (int) ($generated_row['id'] ?? 0));
+            ->where('id = ' . (int) ($generated_row['id'] ?? 0) . ' AND user_id = ' . $user_id);
 
         $summary['updated']++;
     }
@@ -229,28 +234,30 @@ function montly_sync_refresh_bill_history(int $montly_bill_id): array
 
 }
 
-function montly_sync_run(?string $today_argument = null): array
+function montly_sync_run_for_user(?string $today_argument, int $user_id): array
 {
 
     $today = $today_argument !== null && trim($today_argument) !== ''
         ? new DateTimeImmutable($today_argument)
         : new DateTimeImmutable('today');
 
-    $income_day = montly_sync_income_day();
+    $income_day = montly_sync_income_day($user_id);
     $reference = montly_sync_reference_period($today, $income_day);
     $reference_start = $reference['start'];
     $reference_end = $reference['end'];
 
     $montly_bills = SQL()->select("
-        SELECT id, id_group, name, value, day, first_date, last_date
+        SELECT id, user_id, id_group, name, value, day, first_date, last_date
         FROM montly_bills
+        WHERE user_id = " . $user_id . "
         ORDER BY id ASC
     ");
 
     $existing_rows = SQL()->select("
-        SELECT id, id_montly_bill, id_group, name, value, date, reference_start, reference_end
+        SELECT id, user_id, id_montly_bill, id_group, name, value, date, reference_start, reference_end
         FROM bills
-        WHERE date >= '" . $reference_start->format('Y-m-d') . "'
+        WHERE user_id = " . $user_id . "
+          AND date >= '" . $reference_start->format('Y-m-d') . "'
           AND date < '" . $reference_end->format('Y-m-d') . "'
         ORDER BY id ASC
     ");
@@ -278,6 +285,7 @@ function montly_sync_run(?string $today_argument = null): array
 
     $summary = [
         'date' => $today->format('Y-m-d'),
+        'user_id' => $user_id,
         'income_day' => $income_day,
         'reference_start' => $reference_start->format('Y-m-d'),
         'reference_end' => $reference_end->format('Y-m-d'),
@@ -306,7 +314,7 @@ function montly_sync_run(?string $today_argument = null): array
 
                 Delete()
                     ->from('bills')
-                    ->where('id = ' . (int) ($current_row['id'] ?? 0));
+                    ->where('id = ' . (int) ($current_row['id'] ?? 0) . ' AND user_id = ' . $user_id);
 
                 $summary['deleted']++;
             }
@@ -325,7 +333,7 @@ function montly_sync_run(?string $today_argument = null): array
 
                 Delete()
                     ->from('bills')
-                    ->where('id = ' . (int) ($current_row['id'] ?? 0));
+                    ->where('id = ' . (int) ($current_row['id'] ?? 0) . ' AND user_id = ' . $user_id);
 
                 $summary['deleted']++;
             }
@@ -340,6 +348,7 @@ function montly_sync_run(?string $today_argument = null): array
         }
 
         $payload = [
+            'user_id' => $user_id,
             'id_montly_bill' => $montly_bill_id,
             'id_group' => (int) ($montly_bill['id_group'] ?? 0),
             'name' => string_value($montly_bill['name'] ?? ''),
@@ -379,6 +388,7 @@ function montly_sync_run(?string $today_argument = null): array
         }
 
         $has_changes = (int) ($current_row['id_group'] ?? 0) !== (int) $payload['id_group']
+            || (int) ($current_row['user_id'] ?? 0) !== $user_id
             || (int) ($current_row['id_montly_bill'] ?? 0) !== $montly_bill_id
             || string_value($current_row['name'] ?? '') !== $payload['name']
             || number_format((float) ($current_row['value'] ?? 0), 2, '.', '') !== $payload['value']
@@ -390,7 +400,7 @@ function montly_sync_run(?string $today_argument = null): array
 
             Update('bills')
                 ->set($payload)
-                ->where('id = ' . (int) ($current_row['id'] ?? 0));
+                ->where('id = ' . (int) ($current_row['id'] ?? 0) . ' AND user_id = ' . $user_id);
 
             $summary['updated']++;
             $summary['details'][] = [
@@ -415,10 +425,61 @@ function montly_sync_run(?string $today_argument = null): array
 
             Delete()
                 ->from('bills')
-                ->where('id = ' . (int) ($leftover_row['id'] ?? 0));
+                ->where('id = ' . (int) ($leftover_row['id'] ?? 0) . ' AND user_id = ' . $user_id);
 
             $summary['deleted']++;
         }
+    }
+
+    return $summary;
+
+}
+
+function montly_sync_run(?string $today_argument = null, ?int $user_id = null): array
+{
+
+    if ($user_id !== null && $user_id > 0) {
+
+        return montly_sync_run_for_user($today_argument, $user_id);
+    }
+
+    $user_rows = SQL()->select("
+        SELECT DISTINCT u.id
+        FROM users u
+        INNER JOIN incoming i ON i.user_id = u.id
+        ORDER BY u.id ASC
+    ");
+
+    $summary = [
+        'date' => ($today_argument !== null && trim($today_argument) !== '') ? $today_argument : date('Y-m-d'),
+        'processed_users' => 0,
+        'inserted' => 0,
+        'updated' => 0,
+        'existing' => 0,
+        'deleted' => 0,
+        'out_of_bounds' => 0,
+        'no_schedule' => 0,
+        'users' => [],
+    ];
+
+    foreach ($user_rows as $user_row) {
+
+        $current_user_id = (int) ($user_row['id'] ?? 0);
+
+        if ($current_user_id <= 0) {
+
+            continue;
+        }
+
+        $user_summary = montly_sync_run_for_user($today_argument, $current_user_id);
+        $summary['processed_users']++;
+        $summary['inserted'] += (int) ($user_summary['inserted'] ?? 0);
+        $summary['updated'] += (int) ($user_summary['updated'] ?? 0);
+        $summary['existing'] += (int) ($user_summary['existing'] ?? 0);
+        $summary['deleted'] += (int) ($user_summary['deleted'] ?? 0);
+        $summary['out_of_bounds'] += (int) ($user_summary['out_of_bounds'] ?? 0);
+        $summary['no_schedule'] += (int) ($user_summary['no_schedule'] ?? 0);
+        $summary['users'][] = $user_summary;
     }
 
     return $summary;

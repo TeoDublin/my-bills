@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verify_csrf($_POST['csrf_token'] ?
 }
 
 Auth()->require_auth();
+$user_id = auth_user_id_or_fail();
 
 $action = trim(post_string('action'));
 
@@ -77,6 +78,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE id = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -86,6 +88,7 @@ try {
         }
 
         $row_id = Insert([
+            'user_id' => $user_id,
             'id_group' => (int) $group_id,
             'name' => $name,
             'value' => number_format($value, 2, '.', ''),
@@ -93,7 +96,7 @@ try {
             'first_date' => $first_date !== '' ? $first_date : null,
             'last_date' => $last_date !== '' ? $last_date : null,
         ])->into('montly_bills')->get();
-        $sync_summary = montly_sync_run(date('Y-m-d'));
+        $sync_summary = montly_sync_run(date('Y-m-d'), $user_id);
 
         echo json_encode([
             'ok' => true,
@@ -160,6 +163,7 @@ try {
             SELECT id
             FROM montly_bills
             WHERE id = " . (int) $id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -172,6 +176,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE id = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -189,9 +194,9 @@ try {
                 'first_date' => $first_date !== '' ? $first_date : null,
                 'last_date' => $last_date !== '' ? $last_date : null,
             ])
-            ->where('id = ' . (int) $id);
-        $history_refresh = montly_sync_refresh_bill_history((int) $id);
-        $sync_summary = montly_sync_run(date('Y-m-d'));
+            ->where('id = ' . (int) $id . ' AND user_id = ' . $user_id);
+        $history_refresh = montly_sync_refresh_bill_history((int) $id, $user_id);
+        $sync_summary = montly_sync_run(date('Y-m-d'), $user_id);
 
         echo json_encode([
             'ok' => true,
@@ -217,6 +222,7 @@ try {
             SELECT id
             FROM montly_bills
             WHERE id = " . (int) $id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -225,11 +231,11 @@ try {
             throw new InvalidArgumentException('The selected monthly bill does not exist.');
         }
 
-        $deleted_history_rows = montly_sync_delete_generated_rows_for_bill_ids([(int) $id]);
+        $deleted_history_rows = montly_sync_delete_generated_rows_for_bill_ids([(int) $id], $user_id);
 
         Delete()
             ->from('montly_bills')
-            ->where('id = ' . (int) $id);
+            ->where('id = ' . (int) $id . ' AND user_id = ' . $user_id);
 
         echo json_encode([
             'ok' => true,
@@ -251,7 +257,10 @@ try {
         $count_rows = SQL()->select("
             SELECT COUNT(*) AS total
             FROM montly_bills
-            WHERE " . $where . "
+            WHERE " . montly_build_where($payload['filters'], [
+                'selected_ids' => $payload['selected_ids'],
+                'user_id' => $user_id,
+            ]) . "
         ");
         $total = (int) ($count_rows[0]['total'] ?? 0);
 
@@ -263,17 +272,23 @@ try {
         $rows_to_delete = SQL()->select("
             SELECT id
             FROM montly_bills
-            WHERE " . $where . "
+            WHERE " . montly_build_where($payload['filters'], [
+                'selected_ids' => $payload['selected_ids'],
+                'user_id' => $user_id,
+            ]) . "
         ");
         $montly_bill_ids = array_values(array_filter(array_map(
             static fn (array $row): int => (int) ($row['id'] ?? 0),
             $rows_to_delete
         ), static fn (int $id): bool => $id > 0));
-        $deleted_history_rows = montly_sync_delete_generated_rows_for_bill_ids($montly_bill_ids);
+        $deleted_history_rows = montly_sync_delete_generated_rows_for_bill_ids($montly_bill_ids, $user_id);
 
         SQL()->query("
             DELETE FROM montly_bills
-            WHERE " . $where . "
+            WHERE " . montly_build_where($payload['filters'], [
+                'selected_ids' => $payload['selected_ids'],
+                'user_id' => $user_id,
+            ]) . "
         ");
 
         echo json_encode([
@@ -297,6 +312,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE LOWER(name) = LOWER('" . SQL()->escape($name) . "')
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -306,6 +322,7 @@ try {
         }
 
         $group_id = Insert([
+            'user_id' => $user_id,
             'name' => $name,
         ])->into('bills_groups')->get();
 
@@ -337,6 +354,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE id = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -349,6 +367,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE LOWER(name) = LOWER('" . SQL()->escape($name) . "')
+              AND user_id = " . $user_id . "
               AND id <> " . (int) $group_id . "
             LIMIT 1
         ");
@@ -362,7 +381,7 @@ try {
             ->set([
                 'name' => $name,
             ])
-            ->where('id = ' . (int) $group_id);
+            ->where('id = ' . (int) $group_id . ' AND user_id = ' . $user_id);
 
         echo json_encode([
             'ok' => true,
@@ -386,6 +405,7 @@ try {
             SELECT id
             FROM bills_groups
             WHERE id = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
             LIMIT 1
         ");
 
@@ -398,6 +418,7 @@ try {
             SELECT COUNT(*) AS total
             FROM montly_bills
             WHERE id_group = " . (int) $group_id . "
+              AND user_id = " . $user_id . "
         ");
 
         if ((int) ($related_rows[0]['total'] ?? 0) > 0) {
@@ -407,7 +428,7 @@ try {
 
         Delete()
             ->from('bills_groups')
-            ->where('id = ' . (int) $group_id);
+            ->where('id = ' . (int) $group_id . ' AND user_id = ' . $user_id);
 
         $groups = montly_group_options_payload();
 

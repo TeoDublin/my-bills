@@ -16,9 +16,17 @@ function income_is_valid_day($value): bool
 function income_current_entry(): array
 {
 
+    $user_id = auth_user_id();
+
+    if ($user_id <= 0) {
+
+        return [];
+    }
+
     $rows = SQL()->select("
-        SELECT id, value, day
+        SELECT id, user_id, value, day
         FROM incoming
+        WHERE user_id = " . $user_id . "
         ORDER BY id ASC
         LIMIT 1
     ");

@@ -170,6 +170,30 @@
 
     }
 
+    function auth_user_id(): int {
+
+        if (!Auth()->check()) {
+
+            return 0;
+        }
+
+        return (int) (Auth()->user()['id'] ?? 0);
+
+    }
+
+    function auth_user_id_or_fail(): int {
+
+        $user_id = auth_user_id();
+
+        if ($user_id <= 0) {
+
+            throw new RuntimeException('Invalid user.');
+        }
+
+        return $user_id;
+
+    }
+
     function unformat_date(?string $date,string $fallback='-'):string{
 
         if(!$date)return $fallback;

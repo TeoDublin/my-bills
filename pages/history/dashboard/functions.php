@@ -9,10 +9,13 @@ require_once __DIR__ . '/../../montly/income/functions.php';
 function history_dashboard_name_options(): array
 {
 
+    $user_id = auth_user_id_or_fail();
+
     $rows = SQL()->select("
         SELECT DISTINCT `name`
         FROM view_bills
-        WHERE `name` IS NOT NULL AND `name` <> ''
+        WHERE user_id = " . $user_id . "
+          AND `name` IS NOT NULL AND `name` <> ''
         ORDER BY `name` ASC
     ");
 
@@ -39,18 +42,25 @@ function history_dashboard_card_totals(array $filters, string $today): array
         SELECT COALESCE(SUM(value), 0) AS total
         FROM view_bills
         WHERE " . $base_where . "
-          AND `date` >= '" . bills_escape_sql($today) . "'
+          AND `date` > '" . bills_escape_sql($today) . "'
+    ");
+
+    $current_outcomes_rows = SQL()->select("
+        SELECT COALESCE(SUM(value), 0) AS total
+        FROM view_bills
+        WHERE " . $base_where . "
+          AND `date` <= '" . bills_escape_sql($today) . "'
     ");
 
     return [
         'income' => (float) ($income_entry['value'] ?? 0),
         'outcomes' => (float) ($outcomes_rows[0]['total'] ?? 0),
         'next_outcomes' => (float) ($next_outcomes_rows[0]['total'] ?? 0),
-        'currently' => (float) ($income_entry['value'] ?? 0)
-            - (float) ($outcomes_rows[0]['total'] ?? 0),
+        'current_outcomes' => (float) ($current_outcomes_rows[0]['total'] ?? 0),
+        'current_balance' => (float) ($income_entry['value'] ?? 0)
+            - (float) ($current_outcomes_rows[0]['total'] ?? 0),
         'projected_balance' => (float) ($income_entry['value'] ?? 0)
-            - (float) ($outcomes_rows[0]['total'] ?? 0)
-            - (float) ($next_outcomes_rows[0]['total'] ?? 0),
+            - (float) ($outcomes_rows[0]['total'] ?? 0),
     ];
 
 }
@@ -60,12 +70,25 @@ function history_dashboard_view_mode($value): string
 
     $view = trim(string_value($value));
 
-    return in_array($view, ['outcomes', 'next_outcomes'], true) ? $view : 'outcomes';
+    return in_array($view, ['outcomes', 'current_outcomes', 'next_outcomes'], true) ? $view : 'outcomes';
 
 }
 
 function history_dashboard_filters_for_view(array $filters, string $today, string $view_mode): array
 {
+
+    if ($view_mode === 'current_outcomes') {
+
+        $view_filters = $filters;
+        $view_filters['data']['all'] = false;
+
+        if (empty($view_filters['data']['a']) || $view_filters['data']['a'] > $today) {
+
+            $view_filters['data']['a'] = $today;
+        }
+
+        return $view_filters;
+    }
 
     if ($view_mode !== 'next_outcomes') {
 
@@ -150,28 +173,25 @@ function history_dashboard_weekly_series(array $filters): array
 
     $rows = SQL()->select("
         SELECT
-            YEARWEEK(`date`, 1) AS week_key,
-            MIN(`date`) AS week_start,
-            MAX(`date`) AS week_end,
+            CASE WHEN id_montly_bill IS NULL THEN 'extra' ELSE 'monthly' END AS outcome_key,
+            CASE WHEN id_montly_bill IS NULL THEN 'Extra' ELSE 'Monthly' END AS outcome_label,
             COALESCE(SUM(value), 0) AS total
         FROM view_bills
         WHERE " . bills_build_where($filters) . "
-        GROUP BY YEARWEEK(`date`, 1)
-        ORDER BY MIN(`date`) ASC
+        GROUP BY outcome_key, outcome_label
+        ORDER BY FIELD(outcome_key, 'monthly', 'extra')
     ");
 
     return [
         'categories' => array_values(array_map(
-            static fn (array $row): string => format(string_value($row['week_start'] ?? ''), 'd/m/y')
-                . ' - ' .
-                format(string_value($row['week_end'] ?? ''), 'd/m/y'),
+            static fn (array $row): string => string_value($row['outcome_label'] ?? ''),
             $rows
         )),
         'data' => array_values(array_map(
             static fn (array $row): array => [
                 'y' => round((float) ($row['total'] ?? 0), 2),
                 'custom' => [
-                    'weekKey' => (string) ($row['week_key'] ?? ''),
+                    'weekKey' => (string) ($row['outcome_key'] ?? ''),
                 ],
             ],
             $rows
@@ -185,20 +205,20 @@ function history_dashboard_weekly_name_breakdown(array $filters): array
 
     $rows = SQL()->select("
         SELECT
-            YEARWEEK(`date`, 1) AS week_key,
+            CASE WHEN id_montly_bill IS NULL THEN 'extra' ELSE 'monthly' END AS outcome_key,
             `name`,
             COALESCE(SUM(value), 0) AS total
         FROM view_bills
         WHERE " . bills_build_where($filters) . "
-        GROUP BY YEARWEEK(`date`, 1), `name`
-        ORDER BY YEARWEEK(`date`, 1) ASC, total DESC, `name` ASC
+        GROUP BY outcome_key, `name`
+        ORDER BY FIELD(outcome_key, 'monthly', 'extra'), total DESC, `name` ASC
     ");
 
     $breakdown = [];
 
     foreach ($rows as $row) {
 
-        $week_key = string_value($row['week_key'] ?? '');
+        $week_key = string_value($row['outcome_key'] ?? '');
 
         if ($week_key === '') {
 

@@ -59,7 +59,8 @@ function montly_normalize_filters(array $source): array
 function montly_build_where(array $filters, array $options = []): string
 {
 
-    $where_parts = ['1=1'];
+    $user_id = (int) ($options['user_id'] ?? auth_user_id_or_fail());
+    $where_parts = ['1=1', 'user_id = ' . $user_id];
 
     if (!($filters['day']['all'] ?? false)) {
 
@@ -104,8 +105,11 @@ function montly_create_select(string $select = '*'): Select
 function montly_group_options(): array
 {
 
+    $user_id = auth_user_id_or_fail();
+
     return Select('*')
         ->from('bills_groups')
+        ->where('user_id = ' . $user_id)
         ->orderby('name asc')
         ->get();
 

@@ -138,6 +138,7 @@ window.HistoryHistoricTabModule = (function () {
                     billNameInput: document.getElementById('history_bill_name'),
                     billValueInput: document.getElementById('history_bill_value'),
                     billDateInput: document.getElementById('history_bill_date'),
+                    addBillModalElement: document.getElementById('history_add_bill_modal'),
                     billModalTitle: document.querySelector('[data-bill-modal-title]'),
                     billModalSubmit: document.querySelector('[data-bill-modal-submit]'),
                     newGroupNameInput: document.getElementById('history_new_group_name'),
@@ -256,6 +257,16 @@ window.HistoryHistoricTabModule = (function () {
                 this.bindClick(this.dom.confirmGridExportButton, () => this.startGridExport());
                 this.bindClick(this.dom.closeProgressButton, () => this.closeProgressModal());
                 this.bindListener(this.dom.manageGroupSelect, 'change', () => this.syncManageGroupName());
+                this.bindListener(this.dom.addBillModalElement, 'keydown', (event) => {
+
+                    if (event.key !== 'Enter' || event.shiftKey || event.target.closest('textarea')) {
+
+                        return;
+                    }
+
+                    event.preventDefault();
+                    this.createBill();
+                });
                 this.bindListener(document.getElementById('history_group_manage_modal'), 'hidden.bs.modal', () => {
 
                     if (!this.reopenAddBillModalAfterGroupManage) {
@@ -266,7 +277,11 @@ window.HistoryHistoricTabModule = (function () {
                     this.reopenAddBillModalAfterGroupManage = false;
                     this.showModal(this.modals.addBill);
                 });
-                this.bindListener(document.getElementById('history_add_bill_modal'), 'hidden.bs.modal', () => this.resetBillForm());
+                this.bindListener(document.getElementById('history_add_bill_modal'), 'hidden.bs.modal', () => {
+
+                    this.resetBillForm();
+                    this.forceModalCleanup();
+                });
 
                 this.bindPagination();
                 this.bindTableSelection();
@@ -520,6 +535,7 @@ window.HistoryHistoricTabModule = (function () {
                     this.applyGroupOptions(response.groups || [], payload.groupId);
                     this.resetBillForm();
                     this.hideModal(this.modals.addBill);
+                    this.forceModalCleanup();
                     this.context.app.showSuccess(response.message || (this.editingBillId ? 'Bill updated' : 'Bill created'));
                     this.context.app.reloadCurrentPage(this.context.params || {});
                 });
@@ -1153,6 +1169,19 @@ window.HistoryHistoricTabModule = (function () {
 
                     modalInstance.hide();
                 }
+            },
+
+            forceModalCleanup: function () {
+
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+                document.body.style.removeProperty('paddingLeft');
+
+                document.querySelectorAll('.modal-backdrop').forEach((element) => {
+
+                    element.remove();
+                });
             },
 
             getSelectedRowIds: function () {
